@@ -21,3 +21,14 @@ The single-page UI shows the five mandatory panels for the hero scenario
 
 Note: environmental values are LIVE from Open-Meteo (real network); only the Bee context
 is the mock hero fixture (the user's real Bee feed has no jog phrase yet).
+
+## Demo flow recording (GIF + mp4)
+
+![Ambient Guard demo flow](screenshots/M6_demo_flow.gif)
+
+`screenshots/M6_demo_flow.gif` (and the higher-quality `screenshots/M6_demo_flow.mp4`)
+records the full interactive flow, captured with Playwright/Chromium:
+load → initial assessment renders → scroll through evidence + timeline →
+type an intent override ("run at 6 AM") → re-assess → scroll the updated result.
+Produced by `scripts/record.py` + ffmpeg palettegen. Environmental data is live
+Open-Meteo; Bee context is the mock hero fixture.
