@@ -28,8 +28,8 @@ Legend: [ ] todo · [~] in progress · [x] done · (M#) milestone
 - [ ] 2.5 (M2) Failure-path tests (timeout, malformed, rate-limit) — failures surfaced not hidden
 
 ## Milestone 3 — Context normalization
-- [ ] 3.1 (M3) ContextIntent extraction (activity/time/location/intent) with source_ref + confidence
-- [ ] 3.2 (M3) Traceability + no unsupported inference; tests
+- [x] 3.1 (M3) ContextIntent extraction (activity/time/location/intent) with source_ref + confidence — GET /api/v1/context
+- [x] 3.2 (M3) Traceability (notes + source_ref) + no unsupported inference; 16 tests incl. hero scenario + live verify
 
 ## Milestone 4 — Reasoning engine
 - [ ] 4.1 (M4) Threshold rules (AQI/UV/heat/PM2.5) → candidate concerns

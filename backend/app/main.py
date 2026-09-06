@@ -12,9 +12,10 @@ import os
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
+from app.agent.normalize import normalize
 from app.bee import BeeError, get_bee_client
 
-app = FastAPI(title="Ambient Guard", version="0.2.0")
+app = FastAPI(title="Ambient Guard", version="0.3.0")
 
 
 class Health(BaseModel):
@@ -51,6 +52,28 @@ def bee_context(
         "current_location": location.model_dump(),
         "search": search.model_dump() if search else None,
     }
+
+
+@app.get("/api/v1/context")
+def context(
+    query: str | None = Query(default="jog run walk cycle exercise", description="Intent search terms"),
+    limit: int = Query(default=5, ge=1, le=50),
+) -> dict:
+    """Normalize real Bee context into a structured ContextIntent (M3).
+
+    Pulls today-context + current location + intent search, then extracts
+    activity / planned_time / location with traceability and confidence.
+    """
+    client = get_bee_client()
+    try:
+        today = client.today_context()
+        location = client.current_location()
+        search = client.search(query, limit=limit) if query else None
+    except BeeError as e:
+        raise HTTPException(status_code=502, detail=f"Bee integration error: {e}") from e
+
+    intent = normalize(today, location, search)
+    return {"bee_mode": os.getenv("AMBIENT_GUARD_BEE_MODE", "mock"), "context": intent.model_dump(mode="json")}
 
 
 class AssessRequest(BaseModel):
