@@ -2,6 +2,8 @@
 
 **A Personal Environmental Agent powered by Bee.**
 
+**Live demo:** [bee.andywongpt.com](https://bee.andywongpt.com) — deployed on a dedicated Fedora server via Docker Compose behind a Cloudflare Tunnel, consuming **real Bee data** at runtime (`AMBIENT_GUARD_BEE_MODE=mcp`).
+
 Ambient Guard fuses personal context from an Amazon Bee wearable with real environmental
 data to answer the question a plain air-quality app can't:
 
@@ -42,17 +44,27 @@ docker compose up --build    # backend :8080, frontend, postgres
 
 ### Live Bee integration
 
-The competition-critical path uses **real** Bee data (mocks are for tests only):
+The competition-critical path uses **real** Bee data (mocks are for tests only). Three backends,
+selected by `AMBIENT_GUARD_BEE_MODE`:
 
-```bash
-# on the host running the backend:
-bee login                    # authenticate the Bee CLI
-bee mcp status               # verify
-export AMBIENT_GUARD_BEE_MODE=cli   # or mcp
-```
+- **`cli`** — shells out to the local `bee` CLI. Simplest on a desktop where `bee login` works:
+  ```bash
+  bee login
+  export AMBIENT_GUARD_BEE_MODE=cli
+  ```
+- **`mcp`** — calls a `bee mcp serve-http` server over HTTP (JSON-RPC 2.0, bearer token). This is
+  how the **live deployment** works: the containerized backend reaches the host's Bee MCP server.
+  ```bash
+  export AMBIENT_GUARD_BEE_MODE=mcp
+  export AMBIENT_GUARD_BEE_MCP_URL=http://host.docker.internal:8791/mcp
+  export AMBIENT_GUARD_BEE_HTTP_TOKEN=<32+ char token>
+  # AMBIENT_GUARD_BEE_MCP_HOST=127.0.0.1 (default) satisfies the server's localhost guard
+  ```
+- **`mock`** — fixtures, tests/dev only.
 
-See [`.kiro/specs/ambient-guard/design.md`](.kiro/specs/ambient-guard/design.md) for the
-backend selection (`cli` | `mcp` | `mock`).
+The full server wiring (headless `bee login`, `bee mcp serve-http` as a systemd service, the
+loopback forwarder, and the container env) is in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+See [`.kiro/specs/ambient-guard/design.md`](.kiro/specs/ambient-guard/design.md) for the backend design.
 
 ## Built with Kiro
 
@@ -74,6 +86,7 @@ and tooling feedback in [`docs/PRODUCT_FEEDBACK.md`](docs/PRODUCT_FEEDBACK.md).
 | [`docs/RISK_REGISTER.md`](docs/RISK_REGISTER.md) | Risks (R1 = live Bee login) |
 | [`docs/SECURITY_AND_PRIVACY.md`](docs/SECURITY_AND_PRIVACY.md) | Data minimization + security |
 | [`docs/MILESTONE_EXECUTION_PLAN.md`](docs/MILESTONE_EXECUTION_PLAN.md) | M0–M8 plan |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | meow server deploy: Docker Compose, Cloudflare Tunnel, live mcp Bee wiring |
 
 ## License
 
