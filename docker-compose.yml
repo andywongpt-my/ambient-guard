@@ -9,7 +9,13 @@ services:
     build: ./backend
     environment:
       AMBIENT_GUARD_BEE_MODE: ${AMBIENT_GUARD_BEE_MODE:-mock}
+      # For mcp mode: the host runs `bee mcp serve-http` on 127.0.0.1:8790.
+      # From the container, reach it via the host gateway (see extra_hosts below).
+      AMBIENT_GUARD_BEE_MCP_URL: ${AMBIENT_GUARD_BEE_MCP_URL:-http://host.docker.internal:8790/mcp}
+      AMBIENT_GUARD_BEE_HTTP_TOKEN: ${AMBIENT_GUARD_BEE_HTTP_TOKEN:-}
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ambient:ambient@db:5432/ambient_guard}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "127.0.0.1:18080:8080"  # localhost only — nginx is the sole public entry (see docs/RISK_REGISTER.md R6)
     depends_on:

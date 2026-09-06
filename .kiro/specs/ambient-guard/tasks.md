@@ -15,7 +15,7 @@ Legend: [ ] todo · [~] in progress · [x] done · (M#) milestone
 ## Milestone 1 — Live Bee integration (HIGHEST PRIORITY)
 - [x] 1.1 (M1) Install Bee CLI (@beeai/cli 0.7.3) on dev host; `bee login` verified as Andy Wong (id 50853); sanitized evidence in evidence/M1_bee_login.md
 - [x] 1.2 (M1) Bee adapter `cli` backend: `bee today --context`, `bee search --query`, `bee locations current` (all --json); wired to GET /api/v1/bee/context
-- [ ] 1.3 (M1) Bee adapter `mcp` backend (stdio) as alternate path
+- [x] 1.3 (M1) Bee adapter `mcp` backend: JSON-RPC 2.0 over HTTP to `bee mcp serve-http` (bee_get_today/bee_get_current_location/bee_search); 4 respx tests
 - [x] 1.4 (M1) `mock` backend + fixtures (real shapes), gated by AMBIENT_GUARD_BEE_MODE; failure-path tests (not-found/bad-json/not-logged-in)
 - [x] 1.5 (M1) Integration test proving real Bee data enters the app pipeline (test_live_bee_ingress, cli mode); evidence in evidence/M1_bee_ingress.md
 - [ ] 1.6 (M1) DO NOT mark done until live integration demonstrated + evidence stored

@@ -28,8 +28,8 @@ def test_factory_selects_backends(monkeypatch):
     monkeypatch.setenv("AMBIENT_GUARD_BEE_MODE", "mock")
     assert isinstance(get_bee_client(), MockBeeClient)
     assert isinstance(get_bee_client("cli"), CliBeeClient)
-    with pytest.raises(BeeError):
-        get_bee_client("mcp")           # reserved, not yet implemented
+    from app.bee.client import McpBeeClient
+    assert isinstance(get_bee_client("mcp"), McpBeeClient)   # M1.3 implemented
     with pytest.raises(BeeError):
         get_bee_client("bogus")
 
