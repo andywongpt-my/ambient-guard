@@ -1,0 +1,15 @@
+{
+  "location": {
+    "id": 314400000,
+    "latitude": 6.183,
+    "longitude": 116.22,
+    "address": "Tuaran, Sabah, Malaysia",
+    "source_device_id": null,
+    "created_at": 1788700000000,
+    "updated_at": 1788700000000
+  },
+  "age_ms": 120000,
+  "is_recent": true,
+  "recent_threshold_ms": 1800000,
+  "timezone": "Asia/Kuching"
+}

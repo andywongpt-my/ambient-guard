@@ -1,0 +1,22 @@
+{
+  "date": "2026-09-07",
+  "todayBrief": { "calendar_events": [], "emails": [], "timezone": "Asia/Kuching" },
+  "dailySummary": null,
+  "activeTodos": [],
+  "recentNotes": [],
+  "recentConversations": [
+    {
+      "id": 10346999,
+      "start_time": 1788700000000,
+      "end_time": 1788700600000,
+      "device_type": "wearable",
+      "summary": "Andy mentions he plans to go jogging at 5 PM.",
+      "short_summary": "Andy plans to jog at 5 PM.",
+      "state": "COMPLETED",
+      "created_at": 1788700000100,
+      "updated_at": 1788700600100,
+      "utterances_count": 6,
+      "primary_location": null
+    }
+  ]
+}

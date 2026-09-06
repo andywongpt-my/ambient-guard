@@ -1,0 +1,14 @@
+{
+  "results": [
+    {
+      "type": "conversation",
+      "id": 10346999,
+      "short_summary": "Andy plans to jog at 5 PM.",
+      "score": 0.91,
+      "start_time": 1788700000000
+    }
+  ],
+  "next_cursor": null,
+  "search_mode": "bm25",
+  "timezone": "Asia/Kuching"
+}
