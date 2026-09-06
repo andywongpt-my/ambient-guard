@@ -189,6 +189,83 @@ None material — if the `/docs/cli` path shows recurring edge errors, verify it
 
 ---
 
+## FR-004 — `bee login` cannot persist credentials on a headless server (no keyring/D-Bus, no file fallback)
+
+**Date / Time**: 2026-09-07 04:00–04:12 MYT
+**Tool / API / SDK**: Bee CLI (`@beeai/cli`) · v0.7.3 · Fedora 43 server (`meow`), headless SSH session
+
+### Task attempted
+Authenticate `bee` on the deployment server so the containerized backend can consume live
+Bee data via `bee mcp serve-http` (making https://bee.andywongpt.com show real Bee context).
+
+### Why this mattered
+The public demo runs on the server, not the dev machine. For the server to serve REAL Bee
+data (the primary-track requirement), the server's `bee` must be logged in.
+
+### Steps taken
+1. Installed `@beeai/cli` 0.7.3 on the server.
+2. Ran `bee login` over SSH → `The name is not activatable (code: 2)`; fell through to help.
+3. Installed `dbus-daemon` + `gnome-keyring` (sudo).
+4. Ran `bee login` wrapped in `dbus-run-session` + `gnome-keyring-daemon --unlock`.
+5. Started `bee mcp serve-http --port 8790 --token <32+>` and called `bee_get_current_location`.
+
+### Expected result
+`bee login` stores credentials (as it does on a desktop), and `bee status` / the MCP server
+report the account as logged in.
+
+### Actual result
+- Bare `bee login`: `The name is not activatable` (no session D-Bus / Secret Service).
+- With `dbus-run-session` + keyring: keyring tried to raise a **GUI unlock prompt**
+  (`gcr-prompter: cannot open display`) and reported `.../collection/login … does not exist`.
+- Even after a browser authorization, a new shell and the MCP server both report
+  `Not logged in`. `bee` writes **no config/token file** (`~/.config/bee*`, `~/.bee*` absent) —
+  it relies solely on the OS keyring, so with no working keyring the login never persists.
+- `bee mcp serve-http` runs and authenticates the bearer token, but every tool call returns
+  `Not logged in. Run "bee login" first.`
+
+### Severity
+**S3 — Major.** Blocks live Bee on the server via the documented `login` flow; a workaround
+(token-based login, or running the live component on a desktop host) exists.
+
+### Evidence
+`~/bee_login.log` on the server: `The name is not activatable (code: 2)`, `gcr-prompter …
+cannot open display`, `org.gnome.keyring.SystemPrompter exited with status 1`,
+`/org/freedesktop/secrets/collection/login … does not exist (code: 19)`. MCP tool response:
+`{"result":{"content":[{"type":"text","text":"Not logged in. Run \"bee login\" first."}],"isError":true}}`.
+
+### Investigation
+Confirmed the server SSH session has no `XDG_RUNTIME_DIR` and no session bus; `dbus-launch`
+was absent until installed. Verified `bee` stores no plaintext token file, so keyring is the
+only credential store. `bee login --token` / `--token-stdin` exist and bypass the interactive
+keyring OAuth, but require a Bee **account** access token (distinct from the MCP bearer token).
+
+### Root cause
+`bee login` depends on an OS Secret Service (keyring over D-Bus) with no file-based fallback.
+On a headless server that backend isn't running, and `gnome-keyring` still attempts a GUI
+unlock prompt, so credentials are never stored — every subsequent process sees "Not logged in".
+
+### Workaround
+Use `bee login --token-stdin` with a Bee account token (no keyring), OR run the live-Bee
+backend on a desktop host where `bee login` already works and point the public tunnel there.
+Server otherwise runs `AMBIENT_GUARD_BEE_MODE=mock` (live Open-Meteo, mock Bee context).
+
+### Outcome
+**Unresolved (pending decision).** Live server Bee is blocked until a token is supplied or
+the tunnel is repointed at a logged-in host.
+
+### Development impact
+Blocks live Bee on the public site; does not affect the deployed stack, the tunnel, or live
+environmental data, all of which work. Cost a focused debugging session.
+
+### Actionable suggestion
+Support a headless, keyring-free credential store for `bee login` — e.g. persist the token to
+a permission-restricted file under `$XDG_CONFIG_HOME/bee/` when no Secret Service is available
+(with a clear warning), and skip the GUI `gcr-prompter` in non-interactive sessions. Document
+`--token-stdin` prominently as the headless/server path, and clarify where to obtain a Bee
+**account** token (vs. the MCP HTTP bearer token, which is unrelated).
+
+---
+
 # Submission Review Checklist
 
 Before submitting this friction log:
@@ -222,11 +299,15 @@ _Completed near submission._
 ## Total genuine friction events
 - S1: 1
 - S2: 1
-- S3: 1
+- S3: 2
 - S4: 0
 
 ## Most important developer-experience improvement
-Surface `bee login` prerequisites (app installed + Developer Mode + approve link) prominently on the CLI getting-started page, and clarify that `--no-wait` does not finalize an approved session (FR-001, FR-002).
+Two Bee CLI issues dominate: (1) `bee login` has no headless/keyring-free credential path and
+no file fallback (FR-004), so it cannot persist a login on a server without a desktop keyring;
+(2) `bee login` prerequisites and the `--no-wait` finalization behavior are under-documented
+(FR-001, FR-002). Highest-value fix: a documented, file-based token store for headless servers
+plus prominent `--token-stdin` guidance.
 
 ## Most valuable tool experience
 To be completed from actual development experience near submission.
