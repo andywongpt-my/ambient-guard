@@ -99,7 +99,10 @@
 
 <script>
 const $ = (id) => document.getElementById(id);
-const API = ""; // same origin
+// Path-relative API base: works whether the app is served at the origin root
+// (Tailscale serve on a dedicated port) or under a mount prefix like /ambient-guard
+// (Tailscale Funnel path on :443). Strips a trailing index.html and trailing slash.
+const API = (location.pathname.replace(/\/index\.html$/, "").replace(/\/$/, "")) || "";
 
 function fmt(v, s="") { return (v===null||v===undefined) ? "—" : (Math.round(v*10)/10)+s; }
 function timeShort(iso){ try { return new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); } catch { return iso; } }
