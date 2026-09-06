@@ -156,6 +156,12 @@ class McpBeeClient:
         result = body.get("result", {})
         # MCP tool results carry structuredContent, or JSON text in content[].text
         if isinstance(result, dict):
+            if result.get("isError"):
+                msg = ""
+                for item in result.get("content") or []:
+                    if item.get("type") == "text":
+                        msg = item.get("text", ""); break
+                raise BeeError(f"Bee MCP tool {name} returned an error: {msg or result}")
             if "structuredContent" in result and result["structuredContent"] is not None:
                 return result["structuredContent"]
             content = result.get("content")
@@ -169,7 +175,9 @@ class McpBeeClient:
         raise BeeError(f"Bee MCP result had no parseable content for tool {name}")
 
     def today_context(self) -> BeeTodayContext:
-        return BeeTodayContext.model_validate(self._call_tool("bee_get_today", {"context": True}))
+        # bee_get_today MCP tool takes NO arguments (the CLI's --context flag has no
+        # MCP equivalent; passing {context:true} is rejected as an unknown property).
+        return BeeTodayContext.model_validate(self._call_tool("bee_get_today", {}))
 
     def current_location(self) -> BeeCurrentLocation:
         return BeeCurrentLocation.model_validate(self._call_tool("bee_get_current_location", {}))
