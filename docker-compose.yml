@@ -1,0 +1,44 @@
+# Ambient Guard — Docker Compose baseline (M0).
+# Dedicated project name + non-standard HOST ports so it does not collide with the
+# ~10 containers already running on the `meow` server. nginx (already on the host)
+# reverse-proxies the public route to backend's host port. See docs/RISK_REGISTER.md R6.
+name: ambient-guard
+
+services:
+  backend:
+    build: ./backend
+    environment:
+      AMBIENT_GUARD_BEE_MODE: ${AMBIENT_GUARD_BEE_MODE:-mock}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ambient:ambient@db:5432/ambient_guard}
+    ports:
+      - "18080:8080"          # host 18080 -> container 8080 (non-standard to avoid clashes)
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ambient}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ambient}
+      POSTGRES_DB: ${POSTGRES_DB:-ambient_guard}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ambient}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # frontend service added in M6.
+
+volumes:
+  pgdata:
