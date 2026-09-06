@@ -32,9 +32,12 @@ Legend: [ ] todo · [~] in progress · [x] done · (M#) milestone
 - [x] 3.2 (M3) Traceability (notes + source_ref) + no unsupported inference; 16 tests incl. hero scenario + live verify
 
 ## Milestone 4 — Reasoning engine
-- [ ] 4.1 (M4) Threshold rules (AQI/UV/heat/PM2.5) → candidate concerns
-- [ ] 4.2 (M4) Recommendation synthesis with mandatory evidence linkage + guardrail (≥1 evidence)
-- [ ] 4.3 (M4) Explainability output; reasoning tests
+- [x] 4.1 (M4) Threshold rules (AQI/UV/heat/PM2.5/PM10) → tiered evidence (caution/warning)
+- [x] 4.2 (M4) Recommendation synthesis with mandatory evidence linkage + guardrail (≥1 evidence; refuses with 0 obs)
+- [x] 4.3 (M4) Explainability (reasoning_summary + per-evidence notes); 5 reasoning tests
+
+## First vertical slice (spans M1–M4) — CLOSED
+- [x] POST /api/v1/assess: Bee → ContextIntent → environment → one grounded recommendation (evidence/M4_reasoning_slice.md)
 
 ## Milestone 5 — Environmental timeline
 - [ ] 5.1 (M5) Timeline builder labelling observed/forecast/estimate/direct-measurement

@@ -13,7 +13,9 @@ from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
 from app.agent.normalize import normalize
+from app.agent.reasoning import ReasoningEngine, ReasoningError
 from app.bee import BeeError, get_bee_client
+from app.bee.models import BeeSearchResult
 from app.environmental import EnvironmentalService
 
 app = FastAPI(title="Ambient Guard", version="0.4.0")
@@ -93,17 +95,39 @@ def environment(
 
 
 class AssessRequest(BaseModel):
-    location: str | None = None
-    time: str | None = None
+    query: str | None = "jog run walk cycle exercise"
     intent_override: str | None = None
+    lat: float | None = None
+    lon: float | None = None
 
 
 @app.post("/api/v1/assess")
 def assess(req: AssessRequest) -> dict:
-    # STUB — context normalization -> environment -> reasoning arrives in M2-M4.
-    return {
-        "stub": True,
-        "note": "assess pipeline not yet implemented (M2-M4); Bee ingress is live at /api/v1/bee/context",
-        "echo": req.model_dump(),
-        "bee_mode": os.getenv("AMBIENT_GUARD_BEE_MODE", "mock"),
-    }
+    """Full vertical slice: Bee -> ContextIntent -> environment -> one grounded recommendation."""
+    client = get_bee_client()
+    try:
+        today = client.today_context()
+        location = client.current_location()
+        search = client.search(req.query, limit=5) if req.query else None
+    except BeeError as e:
+        raise HTTPException(status_code=502, detail=f"Bee integration error: {e}") from e
+
+    intent = normalize(today, location, search)
+    if req.intent_override:
+        intent = normalize(today, location,
+                           BeeSearchResult(results=[{"id": 0, "short_summary": req.intent_override}]))
+
+    lat = req.lat if req.lat is not None else intent.latitude
+    lon = req.lon if req.lon is not None else intent.longitude
+    if lat is None or lon is None:
+        raise HTTPException(status_code=422,
+                            detail="No location available (no recent Bee location and no lat/lon or AMBIENT_GUARD_DEFAULT_LOCATION).")
+
+    observations, provider_errors = _env_service.observe(lat, lon, when=intent.planned_time)
+    try:
+        assessment = ReasoningEngine().assess(intent, observations, provider_errors)
+    except ReasoningError as e:
+        raise HTTPException(status_code=502, detail=f"Environmental data unavailable: {e}") from e
+
+    return {"bee_mode": os.getenv("AMBIENT_GUARD_BEE_MODE", "mock"),
+            "assessment": assessment.model_dump(mode="json")}
