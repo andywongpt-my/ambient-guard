@@ -8,8 +8,12 @@ selected by AMBIENT_GUARD_BEE_MODE. The full assess pipeline (context normalizat
 from __future__ import annotations
 
 import os
+from datetime import datetime, timedelta
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app.agent.normalize import normalize
@@ -18,9 +22,17 @@ from app.bee import BeeError, get_bee_client
 from app.bee.models import BeeSearchResult
 from app.environmental import EnvironmentalService
 
-app = FastAPI(title="Ambient Guard", version="0.4.0")
+app = FastAPI(title="Ambient Guard", version="0.5.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],          # demo; tighten for production
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 _env_service = EnvironmentalService()
+_STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
 
 
 class Health(BaseModel):
@@ -131,3 +143,43 @@ def assess(req: AssessRequest) -> dict:
 
     return {"bee_mode": os.getenv("AMBIENT_GUARD_BEE_MODE", "mock"),
             "assessment": assessment.model_dump(mode="json")}
+
+
+@app.get("/api/v1/timeline")
+def timeline(
+    lat: float = Query(...),
+    lon: float = Query(...),
+    hours: int = Query(default=6, ge=1, le=12),
+) -> dict:
+    """Environmental timeline (M5 seed): AQI/UV/temp at hourly steps from now.
+
+    Each entry is labeled observed vs forecast. Built from the same provider layer.
+    """
+    now = datetime.now().replace(minute=0, second=0, microsecond=0)
+    entries = []
+    for h in range(hours + 1):
+        when = now + timedelta(hours=h)
+        obs, errors = _env_service.observe(lat, lon, when=when)
+        by = {o.metric: o for o in obs}
+        entries.append({
+            "time": when.isoformat(),
+            "kind": "observed" if h == 0 else "forecast",
+            "aqi": by["aqi"].value if "aqi" in by else None,
+            "uv": by["uv"].value if "uv" in by else None,
+            "temp_c": by["temp_c"].value if "temp_c" in by else None,
+            "pm25": by["pm25"].value if "pm25" in by else None,
+        })
+    return {"entries": entries}
+
+
+# --- static demo UI (zero-build; served by the backend) ---------------------
+if os.path.isdir(_STATIC_DIR):
+    app.mount("/ui", StaticFiles(directory=_STATIC_DIR, html=True), name="ui")
+
+
+@app.get("/")
+def root() -> FileResponse:
+    index = os.path.join(_STATIC_DIR, "index.html")
+    if os.path.isfile(index):
+        return FileResponse(index)
+    raise HTTPException(status_code=404, detail="UI not built")

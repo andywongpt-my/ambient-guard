@@ -40,11 +40,11 @@ Legend: [ ] todo · [~] in progress · [x] done · (M#) milestone
 - [x] POST /api/v1/assess: Bee → ContextIntent → environment → one grounded recommendation (evidence/M4_reasoning_slice.md)
 
 ## Milestone 5 — Environmental timeline
-- [ ] 5.1 (M5) Timeline builder labelling observed/forecast/estimate/direct-measurement
+- [~] 5.1 (M5) Timeline SEED shipped: GET /api/v1/timeline (hourly AQI/UV/temp/PM2.5, observed vs forecast). Full estimate/direct-measurement labelling + activity binding still to enrich.
 
 ## Milestone 6 — UX
-- [ ] 6.1 (M6) Next.js demo screen: context · conditions · recommendation · evidence · timeline
-- [ ] 6.2 (M6) Wire to /api/v1/assess + /api/v1/timeline
+- [x] 6.1 (M6) Zero-build single-page demo UI (backend/static/index.html): 5 panels — context · conditions · recommendation · evidence · timeline. Served at GET / and /ui.
+- [x] 6.2 (M6) Wired to POST /api/v1/assess + GET /api/v1/timeline; CORS enabled. (Next.js rewrite deferred — static UI chosen for a zero-dependency, memory-safe demo; upgrade path noted in design.md.)
 
 ## Milestone 7 — Reliability
 - [ ] 7.1 (M7) Complete unit/integration/failure/E2E suites; security + privacy review
