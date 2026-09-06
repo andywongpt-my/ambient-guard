@@ -8,12 +8,12 @@ Legend: [ ] todo · [~] in progress · [x] done · (M#) milestone
 - [x] 0.2 (M0) Kiro specs: requirements.md, design.md, tasks.md
 - [x] 0.3 (M0) Docs skeleton: ARCHITECTURE, DEMO_PLAN, COMPETITION_COMPLIANCE, PRODUCT_FEEDBACK, SECURITY_AND_PRIVACY, RISK_REGISTER
 - [x] 0.4 (M0) FRICTION_LOG.md, README.md, LICENSE (MIT/Apache-2.0), .gitignore, .env.example
-- [ ] 0.5 (M0) Python project: pyproject/requirements, pytest config, ruff; `scripts/test`, `scripts/dev`
-- [ ] 0.6 (M0) docker-compose.yml baseline (backend + db + frontend) with health checks + restart policy
-- [ ] 0.7 (M0) git init + first commit; push to feature branch when remote is set
+- [x] 0.5 (M0) Python project: requirements + requirements-dev, pytest.ini, ruff; scripts/test.sh; 2 tests green
+- [x] 0.6 (M0) docker-compose.yml baseline (backend + db) with health checks + restart policy + log rotation; non-conflicting host ports for meow
+- [x] 0.7 (M0) git init + first commit (bea2328). Push to a feature branch once a GitHub remote is created.
 
 ## Milestone 1 — Live Bee integration (HIGHEST PRIORITY)
-- [ ] 1.1 (M1) Install Bee CLI on dev host; `bee login`; capture `bee status` evidence (sanitized)
+- [x] 1.1 (M1) Install Bee CLI (@beeai/cli 0.7.3) on dev host; `bee login` verified as Andy Wong (id 50853); sanitized evidence in evidence/M1_bee_login.md
 - [ ] 1.2 (M1) Bee adapter `cli` backend: `bee today`, `bee search --json`, `bee locations current`
 - [ ] 1.3 (M1) Bee adapter `mcp` backend (stdio) as alternate path
 - [ ] 1.4 (M1) `mock` backend + fixtures, gated by AMBIENT_GUARD_BEE_MODE=mock

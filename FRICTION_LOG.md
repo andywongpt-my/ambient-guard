@@ -59,3 +59,12 @@ outcome: open — real Bee login still to be established
 development impact: blocks completion of Milestone 1 until resolved; does not block M0/M2 scaffolding
 actionable suggestion: Bee docs could state hardware/account prerequisites for `bee login` more prominently up front
 ```
+
+**Resolution note (2026-09-07, append-only):** RESOLVED. Installed `@beeai/cli` v0.7.3 via
+`npm install -g @beeai/cli` (the install command is on the docs homepage, not the `/docs/cli`
+page, which intermittently failed to load — minor friction). `bee login` completed after
+approving the connect link in the Bee app; `bee status` verified as Andy Wong (id 50853).
+`bee today` and `bee locations current` return real data. Secondary friction: `bee login`
+polls/blocks (~5 min); `--no-wait` only prints the link and does NOT finalize the approved
+session — the blocking `bee login` (or re-running it) is what claims the token. Sanitized
+evidence: `evidence/M1_bee_login.md`.
