@@ -125,6 +125,10 @@ class McpBeeClient:
         self._httpx = httpx
         self._url = url or os.getenv("AMBIENT_GUARD_BEE_MCP_URL") or "http://127.0.0.1:8790/mcp"
         self._token = token or os.getenv("AMBIENT_GUARD_BEE_HTTP_TOKEN") or ""
+        # The Bee MCP server rejects non-localhost Host/Origin headers. When reached
+        # through a host forwarder (container -> host gateway), send a loopback Host so
+        # the guard passes. Override via AMBIENT_GUARD_BEE_MCP_HOST if the server moves.
+        self._host = os.getenv("AMBIENT_GUARD_BEE_MCP_HOST") or "127.0.0.1"
         self._timeout = timeout
         self._id = 0
 
@@ -135,7 +139,9 @@ class McpBeeClient:
         payload = {"jsonrpc": "2.0", "id": self._id,
                    "method": "tools/call", "params": {"name": name, "arguments": arguments}}
         headers = {"Authorization": f"Bearer {self._token}",
-                   "Content-Type": "application/json"}
+                   "Content-Type": "application/json",
+                   "Host": self._host,
+                   "Origin": f"http://{self._host}"}
         try:
             r = self._httpx.post(self._url, json=payload, headers=headers, timeout=self._timeout)
             r.raise_for_status()
