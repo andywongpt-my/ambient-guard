@@ -266,6 +266,108 @@ a permission-restricted file under `$XDG_CONFIG_HOME/bee/` when no Secret Servic
 
 ---
 
+## FR-005 — `bee mcp serve-http` 403s on non-localhost Host/Origin, blocking container access
+
+**Date / Time**: 2026-09-07 04:18 MYT
+**Tool / API / SDK**: Bee CLI MCP HTTP transport (`bee mcp serve-http`) · v0.7.3 · Fedora 43 (`meow`)
+
+### Task attempted
+Let the Dockerized Ambient Guard backend consume the host's `bee mcp serve-http` (bound to
+127.0.0.1:8790) via the Docker host gateway.
+
+### Why this mattered
+The backend runs in a container; the Bee MCP server runs on the host loopback. The container
+must reach it to serve live Bee data.
+
+### Steps taken
+1. Added a host TCP forwarder `0.0.0.0:8791 → 127.0.0.1:8790` (the server is loopback-only).
+2. Pointed the container at `http://host.docker.internal:8791/mcp` with the bearer token.
+3. Called a tool from the container.
+
+### Expected result
+With a valid bearer token, the authenticated JSON-RPC call succeeds.
+
+### Actual result
+`403 Forbidden`. The server rejects requests whose `Host`/`Origin` header is not localhost —
+independent of the (valid) bearer token. The container's request carried
+`Host: host.docker.internal:8791`.
+
+### Severity
+**S2 — Moderate.** Documented security behavior, but it silently blocks a legitimate
+same-host-via-gateway path; a header override is a clean workaround.
+
+### Evidence
+`{"detail":"Bee MCP request failed: Client error '403 Forbidden' for url 'http://host.docker.internal:8791/mcp'"}`.
+
+### Root cause
+The HTTP transport enforces a localhost-only `Host`/`Origin` guard (defense against DNS
+rebinding). A container reaching the server through the host gateway presents a non-loopback
+Host, so the guard rejects it even though the traffic never leaves the host.
+
+### Workaround
+Send `Host: 127.0.0.1` + `Origin: http://127.0.0.1` on the client request (implemented as
+`AMBIENT_GUARD_BEE_MCP_HOST`, default `127.0.0.1`). The forwarder is a raw TCP pipe, so the
+overridden Host reaches the server unchanged and the guard passes.
+
+### Outcome
+**Resolved.**
+
+### Actionable suggestion
+Allow an explicit allow-list of accepted Host/Origin values (e.g. `--allow-host`) or a flag to
+bind a non-loopback interface for trusted same-host container setups, so operators don't have
+to spoof the Host header to use the documented HTTP transport from a container.
+
+---
+
+## FR-006 — MCP `bee_get_today` rejects the `context` argument that the CLI `--context` flag implies
+
+**Date / Time**: 2026-09-07 04:22 MYT
+**Tool / API / SDK**: Bee CLI MCP tools (`bee_get_today`) · v0.7.3 · Fedora 43 (`meow`)
+
+### Task attempted
+Fetch the Bee wearable *context* (conversations/todos/notes) over MCP, mirroring the CLI's
+`bee today --context`.
+
+### Why this mattered
+The context normalization layer sources the intent phrase from today-context; the MCP path
+must return the same data the CLI `--context` flag returns.
+
+### Steps taken
+Called `tools/call` for `bee_get_today` with `{"context": true}` (mapping the CLI `--context`).
+
+### Expected result
+The tool returns the wearable context, as `bee today --context` does on the CLI.
+
+### Actual result
+`Invalid arguments for bee_get_today: 'context' is not a recognized property.` The MCP tool's
+input schema has **no properties** — it takes no arguments — yet the CLI exposes `--context`.
+`tools/list` confirmed `bee_get_today -> []`. Calling it with `{}` returns the today object
+(including the context fields) correctly.
+
+### Severity
+**S1 — Minor.** Quickly diagnosed via `tools/list`; the fix is to pass no arguments.
+
+### Evidence
+`tools/list`: `bee_get_today -> []`. Error envelope:
+`{"result":{"content":[{"type":"text","text":"Invalid arguments for bee_get_today: 'context' is not a recognized property."}],"isError":true}}`.
+
+### Root cause
+CLI/MCP surface mismatch: the CLI `today` command has a `--context` flag, but the MCP
+`bee_get_today` tool takes no arguments and returns the full object unconditionally.
+
+### Workaround
+Call `bee_get_today` with `{}`; the returned object already contains the context fields.
+
+### Outcome
+**Resolved.**
+
+### Actionable suggestion
+Align the MCP tool schemas with the CLI flags (accept an optional `context` arg on
+`bee_get_today`, or document the difference in the MCP tool catalog), so a developer mapping
+CLI commands to MCP tools doesn't hit a rejected-argument error.
+
+---
+
 # Submission Review Checklist
 
 Before submitting this friction log:
@@ -297,17 +399,18 @@ _Completed near submission._
 - Other: —
 
 ## Total genuine friction events
-- S1: 1
-- S2: 1
+- S1: 2
+- S2: 2
 - S3: 2
 - S4: 0
 
 ## Most important developer-experience improvement
-Two Bee CLI issues dominate: (1) `bee login` has no headless/keyring-free credential path and
-no file fallback (FR-004), so it cannot persist a login on a server without a desktop keyring;
-(2) `bee login` prerequisites and the `--no-wait` finalization behavior are under-documented
-(FR-001, FR-002). Highest-value fix: a documented, file-based token store for headless servers
-plus prominent `--token-stdin` guidance.
+Bee CLI on headless servers is the recurring theme: (1) `bee login` has no keyring-free/file
+credential store (FR-004); (2) `bee mcp serve-http` 403s on non-localhost Host/Origin, so a
+container reaching it via the host gateway must spoof the Host header (FR-005); (3) MCP tool
+schemas diverge from CLI flags, e.g. `bee_get_today` rejects the CLI's `--context` (FR-006).
+Highest-value fixes: a file-based token store for headless login, and an explicit
+Host/Origin allow-list (or trusted-interface bind) for the MCP HTTP transport.
 
 ## Most valuable tool experience
 To be completed from actual development experience near submission.
