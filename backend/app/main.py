@@ -14,8 +14,11 @@ from pydantic import BaseModel
 
 from app.agent.normalize import normalize
 from app.bee import BeeError, get_bee_client
+from app.environmental import EnvironmentalService
 
-app = FastAPI(title="Ambient Guard", version="0.3.0")
+app = FastAPI(title="Ambient Guard", version="0.4.0")
+
+_env_service = EnvironmentalService()
 
 
 class Health(BaseModel):
@@ -74,6 +77,19 @@ def context(
 
     intent = normalize(today, location, search)
     return {"bee_mode": os.getenv("AMBIENT_GUARD_BEE_MODE", "mock"), "context": intent.model_dump(mode="json")}
+
+
+@app.get("/api/v1/environment")
+def environment(
+    lat: float = Query(..., description="Latitude"),
+    lon: float = Query(..., description="Longitude"),
+) -> dict:
+    """Environmental observations for a location (M2). Provider errors are explicit."""
+    observations, errors = _env_service.observe(lat, lon)
+    return {
+        "observations": [o.model_dump(mode="json") for o in observations],
+        "provider_errors": errors,
+    }
 
 
 class AssessRequest(BaseModel):

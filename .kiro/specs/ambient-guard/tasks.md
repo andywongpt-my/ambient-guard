@@ -21,11 +21,11 @@ Legend: [ ] todo · [~] in progress · [x] done · (M#) milestone
 - [ ] 1.6 (M1) DO NOT mark done until live integration demonstrated + evidence stored
 
 ## Milestone 2 — Environmental data layer
-- [ ] 2.1 (M2) Provider protocol + Observation model
-- [ ] 2.2 (M2) Open-Meteo weather+UV provider (no key)
-- [ ] 2.3 (M2) Air-quality provider (Open-Meteo air-quality / OpenAQ) — PM2.5/PM10/AQI/O3/NO2
-- [ ] 2.4 (M2) Cross-cutting: timeout, retry, validation, unit normalization, source attribution, cache
-- [ ] 2.5 (M2) Failure-path tests (timeout, malformed, rate-limit) — failures surfaced not hidden
+- [x] 2.1 (M2) Provider protocol + Observation model (metric/value/unit/kind/source)
+- [x] 2.2 (M2) Open-Meteo weather+UV provider (no key) — temp/humidity/wind/precip/uv/weather_code
+- [x] 2.3 (M2) Open-Meteo air-quality — PM2.5/PM10/O3/NO2/US-AQI
+- [x] 2.4 (M2) Cross-cutting: timeout, retry, validation, unit normalization, source attribution, TTL cache; GET /api/v1/environment
+- [x] 2.5 (M2) Failure-path tests (timeout, malformed, missing-metric skip, error surfacing, cache) — 6 tests, respx-mocked
 
 ## Milestone 3 — Context normalization
 - [x] 3.1 (M3) ContextIntent extraction (activity/time/location/intent) with source_ref + confidence — GET /api/v1/context
