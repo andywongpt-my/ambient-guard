@@ -109,6 +109,70 @@ class MockBeeClient:
         return BeeSearchResult.model_validate(self._load("search.json"))
 
 
+# --------------------------------------------------------------------------- MCP
+
+class McpBeeClient:
+    """MCP backend: JSON-RPC 2.0 over HTTP to `bee mcp serve-http` (127.0.0.1:8790).
+
+    The CLI doubles as an MCP server; each capability is a tool (bee_get_today,
+    bee_get_current_location, bee_search). We call `tools/call` and unwrap the
+    tool's structured result. Auth is a bearer token (>=32 chars).
+    """
+
+    def __init__(self, url: str | None = None, token: str | None = None,
+                 timeout: float = 20.0) -> None:
+        import httpx  # local import so cli/mock paths don't require httpx at import time
+        self._httpx = httpx
+        self._url = url or os.getenv("AMBIENT_GUARD_BEE_MCP_URL") or "http://127.0.0.1:8790/mcp"
+        self._token = token or os.getenv("AMBIENT_GUARD_BEE_HTTP_TOKEN") or ""
+        self._timeout = timeout
+        self._id = 0
+
+    def _call_tool(self, name: str, arguments: dict) -> dict:
+        if not self._token:
+            raise BeeError("AMBIENT_GUARD_BEE_HTTP_TOKEN is required for the mcp backend.")
+        self._id += 1
+        payload = {"jsonrpc": "2.0", "id": self._id,
+                   "method": "tools/call", "params": {"name": name, "arguments": arguments}}
+        headers = {"Authorization": f"Bearer {self._token}",
+                   "Content-Type": "application/json"}
+        try:
+            r = self._httpx.post(self._url, json=payload, headers=headers, timeout=self._timeout)
+            r.raise_for_status()
+            body = r.json()
+        except self._httpx.HTTPError as e:
+            raise BeeError(f"Bee MCP request failed: {e}") from e
+        except ValueError as e:
+            raise BeeError(f"Bee MCP returned non-JSON: {e}") from e
+
+        if "error" in body:
+            raise BeeError(f"Bee MCP tool error: {body['error']}")
+        result = body.get("result", {})
+        # MCP tool results carry structuredContent, or JSON text in content[].text
+        if isinstance(result, dict):
+            if "structuredContent" in result and result["structuredContent"] is not None:
+                return result["structuredContent"]
+            content = result.get("content")
+            if isinstance(content, list):
+                for item in content:
+                    if item.get("type") == "text":
+                        try:
+                            return json.loads(item["text"])
+                        except (json.JSONDecodeError, KeyError):
+                            continue
+        raise BeeError(f"Bee MCP result had no parseable content for tool {name}")
+
+    def today_context(self) -> BeeTodayContext:
+        return BeeTodayContext.model_validate(self._call_tool("bee_get_today", {"context": True}))
+
+    def current_location(self) -> BeeCurrentLocation:
+        return BeeCurrentLocation.model_validate(self._call_tool("bee_get_current_location", {}))
+
+    def search(self, query: str, limit: int = 5) -> BeeSearchResult:
+        return BeeSearchResult.model_validate(
+            self._call_tool("bee_search", {"query": query, "limit": limit}))
+
+
 # ----------------------------------------------------------------------- factory
 
 def get_bee_client(mode: str | None = None) -> BeeClient:
@@ -118,5 +182,5 @@ def get_bee_client(mode: str | None = None) -> BeeClient:
     if mode == "mock":
         return MockBeeClient()
     if mode == "mcp":
-        raise BeeError("Bee MCP backend not yet implemented (tracked as M1.3). Use cli or mock.")
+        return McpBeeClient()
     raise BeeError(f"Unknown AMBIENT_GUARD_BEE_MODE={mode!r}. Expected cli | mcp | mock.")
