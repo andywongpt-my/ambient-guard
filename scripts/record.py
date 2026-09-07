@@ -2,7 +2,7 @@ import sys
 from playwright.sync_api import sync_playwright
 
 OUT_DIR = sys.argv[1] if len(sys.argv) > 1 else "."
-URL = "http://127.0.0.1:18080/"
+URL = sys.argv[2] if len(sys.argv) > 2 else "http://127.0.0.1:18080/"
 
 with sync_playwright() as p:
     b = p.chromium.launch()
