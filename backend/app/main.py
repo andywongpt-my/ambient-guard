@@ -141,6 +141,7 @@ def assess(req: AssessRequest) -> dict:
     """Full vertical slice: Bee -> ContextIntent -> environment -> one grounded recommendation.
     
     G2: Enhanced with alternative-time analysis and structured explanation data.
+    G3: Enhanced with personal context intelligence for feasibility evaluation.
     """
     client = get_bee_client()
     try:
@@ -164,12 +165,14 @@ def assess(req: AssessRequest) -> dict:
     observations, provider_errors = _env_service.observe(lat, lon, when=intent.planned_time)
     
     # G2: Pass observe_func for alternative window analysis
+    # G3: Pass bee_today_context for personal context intelligence
     try:
         assessment = ReasoningEngine().assess(
             intent, observations, provider_errors,
             observe_func=_env_service.observe,
             lat=lat,
             lon=lon,
+            bee_today_context=today.model_dump(),  # G3: Pass raw Bee context for constraint extraction
         )
     except ReasoningError as e:
         raise HTTPException(status_code=502, detail=f"Environmental data unavailable: {e}") from e
