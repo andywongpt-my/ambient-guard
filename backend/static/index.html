@@ -92,7 +92,7 @@
   <div class="panel">
     <h2>5 · Environmental timeline</h2>
     <table id="timeline"><thead><tr>
-      <th>Time</th><th>Kind</th><th>AQI</th><th>UV</th><th>Temp °C</th><th>PM2.5</th>
+      <th>Time</th><th>Data</th><th>Exposure</th><th>AQI</th><th>UV</th><th>Temp °C</th><th>PM2.5</th>
     </tr></thead><tbody></tbody></table>
   </div>
 </main>
@@ -157,21 +157,26 @@ async function assess() {
        (${e.observation.kind}, ${e.observation.source.provider})</span></li>`).join("");
 
   // 5. timeline (needs coords)
-  if (c.latitude != null && c.longitude != null) loadTimeline(c.latitude, c.longitude);
+  if (c.latitude != null && c.longitude != null) loadTimeline(c.latitude, c.longitude, c.planned_time);
   else $("#timeline tbody") && ($("timeline").querySelector("tbody").innerHTML =
-    `<tr><td colspan="6" class="note">No coordinates available for timeline.</td></tr>`);
+    `<tr><td colspan="7" class="note">No coordinates available for timeline.</td></tr>`);
 }
 
-async function loadTimeline(lat, lon) {
+async function loadTimeline(lat, lon, planned) {
   try {
-    const r = await fetch(`${API}/api/v1/timeline?lat=${lat}&lon=${lon}&hours=6`);
+    const q = `${API}/api/v1/timeline?lat=${lat}&lon=${lon}&hours=6` + (planned ? `&planned=${encodeURIComponent(planned)}` : "");
+    const r = await fetch(q);
     const d = await r.json();
-    $("timeline").querySelector("tbody").innerHTML = d.entries.map(e =>
-      `<tr><td>${timeShort(e.time)}</td><td>${e.kind}</td><td>${fmt(e.aqi)}</td>
-        <td>${fmt(e.uv)}</td><td>${fmt(e.temp_c)}</td><td>${fmt(e.pm25)}</td></tr>`).join("");
+    $("timeline").querySelector("tbody").innerHTML = d.entries.map(e => {
+      const mark = e.is_planned ? ' style="background:#0e2436"' : "";
+      const planned = e.is_planned ? ' ◀ planned' : "";
+      return `<tr${mark}><td>${timeShort(e.time)}${planned}</td><td>${e.data_kind}</td>
+        <td>${e.exposure_kind}</td><td>${fmt(e.aqi)}</td>
+        <td>${fmt(e.uv)}</td><td>${fmt(e.temp_c)}</td><td>${fmt(e.pm25)}</td></tr>`;
+    }).join("");
   } catch (e) {
     $("timeline").querySelector("tbody").innerHTML =
-      `<tr><td colspan="6" class="err">Timeline failed: ${e.message}</td></tr>`;
+      `<tr><td colspan="7" class="err">Timeline failed: ${e.message}</td></tr>`;
   }
 }
 

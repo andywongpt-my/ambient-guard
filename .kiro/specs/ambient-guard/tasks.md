@@ -40,7 +40,7 @@ Legend: [ ] todo · [~] in progress · [x] done · (M#) milestone
 - [x] POST /api/v1/assess: Bee → ContextIntent → environment → one grounded recommendation (evidence/M4_reasoning_slice.md)
 
 ## Milestone 5 — Environmental timeline
-- [~] 5.1 (M5) Timeline SEED shipped: GET /api/v1/timeline (hourly AQI/UV/temp/PM2.5, observed vs forecast). Full estimate/direct-measurement labelling + activity binding still to enrich.
+- [x] 5.1 (M5) Timeline builder (app/agent/timeline.py): per-entry data_kind (observed|forecast from the observation) + exposure_kind (estimate|direct-measurement), planned-hour marking; GET /api/v1/timeline?planned=; UI shows Data/Exposure columns + planned row. 3 tests.
 
 ## Milestone 6 — UX
 - [x] 6.1 (M6) Zero-build single-page demo UI (backend/static/index.html): 5 panels — context · conditions · recommendation · evidence · timeline. Served at GET / and /ui.
