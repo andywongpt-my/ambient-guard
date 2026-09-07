@@ -1,7 +1,11 @@
-# Ambient Guard — Docker Compose baseline (M0).
-# Dedicated project name + non-standard HOST ports so it does not collide with the
-# ~10 containers already running on the `meow` server. nginx (already on the host)
-# reverse-proxies the public route to backend's host port. See docs/RISK_REGISTER.md R6.
+# Ambient Guard — Docker Compose (single backend service).
+# Dedicated project name + non-standard HOST port so it does not collide with the
+# ~10 containers already running on the `meow` server. Public route is fronted by a
+# Cloudflare Tunnel -> 127.0.0.1:18080 (see docs/DEPLOYMENT.md). See RISK_REGISTER R6.
+#
+# NOTE: no database service — the app persists NOTHING (all Bee data is in-memory
+# per request; verified in the M7 review). A Postgres service can be re-added later
+# WITH an explicit retention policy if a real persistence need arises.
 name: ambient-guard
 
 services:
@@ -15,38 +19,13 @@ services:
       AMBIENT_GUARD_BEE_HTTP_TOKEN: ${AMBIENT_GUARD_BEE_HTTP_TOKEN:-}
       # R3 fallback location used when Bee's current location is stale (is_recent=false).
       AMBIENT_GUARD_DEFAULT_LOCATION: ${AMBIENT_GUARD_DEFAULT_LOCATION:-}
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ambient:ambient@db:5432/ambient_guard}
+      # CORS allow-list (M7); comma-separated. Omit to use the code default.
+      AMBIENT_GUARD_CORS_ORIGINS: ${AMBIENT_GUARD_CORS_ORIGINS:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "127.0.0.1:18080:8080"  # localhost only — nginx is the sole public entry (see docs/RISK_REGISTER.md R6)
-    depends_on:
-      db:
-        condition: service_healthy
+      - "127.0.0.1:18080:8080"  # localhost only — Cloudflare Tunnel is the public entry
     restart: unless-stopped
     logging:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
-
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-ambient}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ambient}
-      POSTGRES_DB: ${POSTGRES_DB:-ambient_guard}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ambient}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-    logging:
-      driver: json-file
-      options: { max-size: "10m", max-file: "3" }
-
-  # frontend service added in M6.
-
-volumes:
-  pgdata:

@@ -23,13 +23,19 @@ from app.bee import BeeError, get_bee_client
 from app.bee.models import BeeSearchResult
 from app.environmental import EnvironmentalService
 
-app = FastAPI(title="Ambient Guard", version="0.5.0")
+app = FastAPI(title="Ambient Guard", version="0.6.0")
 
+# CORS: explicit allow-list (M7). Defaults cover the live public origin + local dev;
+# override via AMBIENT_GUARD_CORS_ORIGINS (comma-separated). No wildcard.
+_default_origins = "https://bee.andywongpt.com,http://localhost:18080,http://127.0.0.1:18080"
+_cors_origins = [o.strip() for o in
+                 (os.getenv("AMBIENT_GUARD_CORS_ORIGINS") or _default_origins).split(",")
+                 if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # demo; tighten for production
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_cors_origins,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 _env_service = EnvironmentalService()
