@@ -8,7 +8,7 @@ selected by AMBIENT_GUARD_BEE_MODE. The full assess pipeline (context normalizat
 from __future__ import annotations
 
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,6 +18,7 @@ from pydantic import BaseModel
 
 from app.agent.normalize import normalize
 from app.agent.reasoning import ReasoningEngine, ReasoningError
+from app.agent.timeline import build_timeline
 from app.bee import BeeError, get_bee_client
 from app.bee.models import BeeSearchResult
 from app.environmental import EnvironmentalService
@@ -166,26 +167,23 @@ def timeline(
     lat: float = Query(...),
     lon: float = Query(...),
     hours: int = Query(default=6, ge=1, le=12),
+    planned: str | None = Query(default=None, description="ISO planned activity time to mark on the timeline"),
 ) -> dict:
-    """Environmental timeline (M5 seed): AQI/UV/temp at hourly steps from now.
+    """Environmental timeline (M5): hourly AQI/UV/temp/PM2.5 with per-entry labels.
 
-    Each entry is labeled observed vs forecast. Built from the same provider layer.
+    Each entry carries data_kind (observed|forecast, from the observation itself) and
+    exposure_kind (estimate|direct-measurement — API/location-based today, so 'estimate';
+    a physical sensor would be 'direct-measurement'). The entry containing the planned
+    activity time is flagged is_planned.
     """
-    now = datetime.now().replace(minute=0, second=0, microsecond=0)
-    entries = []
-    for h in range(hours + 1):
-        when = now + timedelta(hours=h)
-        obs, errors = _env_service.observe(lat, lon, when=when)
-        by = {o.metric: o for o in obs}
-        entries.append({
-            "time": when.isoformat(),
-            "kind": "observed" if h == 0 else "forecast",
-            "aqi": by["aqi"].value if "aqi" in by else None,
-            "uv": by["uv"].value if "uv" in by else None,
-            "temp_c": by["temp_c"].value if "temp_c" in by else None,
-            "pm25": by["pm25"].value if "pm25" in by else None,
-        })
-    return {"entries": entries}
+    planned_dt = None
+    if planned:
+        try:
+            planned_dt = datetime.fromisoformat(planned)
+        except ValueError:
+            planned_dt = None
+    entries = build_timeline(_env_service.observe, lat, lon, hours=hours, planned_time=planned_dt)
+    return {"entries": [e.model_dump(mode="json") for e in entries]}
 
 
 # --- static demo UI (zero-build; served by the backend) ---------------------
