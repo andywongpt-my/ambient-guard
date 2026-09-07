@@ -32,3 +32,16 @@ load → initial assessment renders → scroll through evidence + timeline →
 type an intent override ("run at 6 AM") → re-assess → scroll the updated result.
 Produced by `scripts/record.py` + ffmpeg palettegen. Environmental data is live
 Open-Meteo; Bee context is the mock hero fixture.
+
+## Live demo flow recording (real Bee, mcp mode)
+
+![Ambient Guard live demo flow](screenshots/M6_demo_flow_live.gif)
+
+`screenshots/M6_demo_flow_live.gif` (+ `M6_demo_flow_live.mp4`) records the same flow against
+the **live public site** [bee.andywongpt.com](https://bee.andywongpt.com) in `bee_mode=mcp` —
+real Bee data end-to-end: `Bee mode: mcp`, live location (Tuaran, Sabah, recent-location=true),
+real Open-Meteo conditions (e.g. AQI 115, PM2.5 43.7), and a grounded recommendation with
+source-attributed `open-meteo (observed)` evidence. Captured via
+`scripts/record.py <out-dir> https://bee.andywongpt.com/`. (The user's real Bee feed has no
+jog phrase, so panel 1 activity is empty until the intent-override step drives a full
+recommendation — this is the no-inference guarantee, not a bug.)
