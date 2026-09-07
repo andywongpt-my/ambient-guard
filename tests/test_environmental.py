@@ -40,7 +40,8 @@ _AIR_JSON = {
 def test_happy_path_at_17h():
     respx.get(_FORECAST_URL).mock(return_value=httpx.Response(200, json=_FORECAST_JSON))
     respx.get(_AIR_URL).mock(return_value=httpx.Response(200, json=_AIR_JSON))
-    obs = OpenMeteoProvider().fetch(6.18, 116.22, when=NOW.replace(hour=17))
+    # Pass NOW as _fetched to ensure 17:00 is treated as forecast relative to "now" (noon)
+    obs = OpenMeteoProvider().fetch(6.18, 116.22, when=NOW.replace(hour=17), _fetched=NOW)
     by = {o.metric: o for o in obs}
     assert by["temp_c"].value == 29.0 and by["temp_c"].unit == "°C"
     assert by["uv"].value == 3.0

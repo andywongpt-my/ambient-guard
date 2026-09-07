@@ -138,9 +138,17 @@ class OpenMeteoProvider:
             return "hazardous"
 
     def fetch(self, latitude: float, longitude: float,
-              when: datetime | None = None) -> list[Observation]:
+              when: datetime | None = None, _fetched: datetime | None = None) -> list[Observation]:
+        """Fetch environmental observations.
+        
+        Args:
+            latitude: Location latitude
+            longitude: Location longitude  
+            when: Target time (default: now)
+            _fetched: Internal - override fetched_at timestamp for testing
+        """
         when = when or datetime.now()
-        fetched = datetime.now()
+        fetched = _fetched if _fetched is not None else datetime.now()
         common = {"latitude": latitude, "longitude": longitude,
                   "timezone": "auto", "forecast_days": 2}
 
