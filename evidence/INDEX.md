@@ -21,6 +21,10 @@ This directory contains evidence and documentation for Ambient Guard milestones.
 - **Live Context:** [milestones/G3/live_bee_context.json](milestones/G3/live_bee_context.json)
 - **Live Assessment:** [milestones/G3/live_assess_response.json](milestones/G3/live_assess_response.json)
 
+### G4: Demo Experience & Personal Environmental UI
+- **Status:** IMPLEMENTED (pending deployment verification)
+- **Certification:** [milestones/G4/G4_certification.md](milestones/G4/G4_certification.md)
+
 ## Milestone Documents (M1-M7)
 
 | ID | Title | Document |
