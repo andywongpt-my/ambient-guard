@@ -15,26 +15,61 @@ Ambient Guard applies **data minimization** to Bee content.
   - Only constraints relevant to timing decisions are extracted
   - Raw text is never persisted (see Privacy-by-Design below)
 
+### What Bee data is consumed (G7)
+- **Guard-worthy activities:** Upcoming outdoor activities with specific planned times
+- **Activity type, time, location:** Minimum data to monitor environmental conditions
+- **Data minimization applied:**
+  - Only outdoor activities qualify (jogging, cycling, hiking, etc.)
+  - Only future events are monitored
+  - Raw Bee source references are hashed, never stored as raw text
+
 ### Why it is needed
 - Activity + time + location are the minimum inputs to select the right environmental
   observations and produce a relevant recommendation.
 - G3: Personal constraints enable feasibility evaluation (e.g., "Cannot jog at 7 PM if you have dinner at 7 PM")
+- G7: Proactive monitoring requires persisting minimal state to track decision changes over time
 
-### What is stored
-- **Nothing is persisted.** Verified in the M7 review (evidence/M7_reliability_security_privacy.md):
-  the backend has no database code — Bee data (raw or normalized) and assessments are held
-  **in-memory for the single request only** and discarded when the response returns.
+### What is stored (G1-G4)
+- **Nothing is persisted for request-only mode.** Verified in the M7 review:
+  the backend has no database code for these paths — Bee data (raw or normalized) and 
+  assessments are held **in-memory for the single request only** and discarded when the 
+  response returns.
+
+### What is stored (G7)
+- **Guard Mode requires minimal persistence** for proactive monitoring:
+  - Guard: activity type, planned time, location coordinates, lifecycle status
+  - Guard Assessment: decision state, environmental summary, reason codes
+  - Guard Alert: change type, reason codes, evidence summary
+- **Bee source references are HASHED** (SHA-256), never stored as raw text
+- **Only normalized data is persisted:**
+  - Activity type (e.g., "jogging")
+  - Planned time (ISO timestamp)
+  - Location coordinates (lat/lon)
+  - Decision state enum values
+  - Reason code strings
 
 ### What is NOT stored
 - Raw Bee recordings, full transcripts, unrelated conversations, unrelated personal
   information, full location history, raw todo text, raw conversation content.
-- G3: The `raw_text` field in `PersonalConstraint` is **never persisted** — it exists only during
-  the extraction phase for debugging and is not included in `to_dict()` serialization.
+- G3: The `raw_text` field in `PersonalConstraint` is **never persisted**
+- G7: Raw Bee source text is **hashed before storage**, never persisted as-is
 
-### Retention
-- Zero server-side retention today. If persistence is added later, it must come with an
-  explicit, documented retention policy and store normalized structured data only — never raw
-  Bee content.
+### Retention (G7)
+- **Guards expire** after planned time + 2-hour grace period
+- **Data retention:** 7 days after guard expiration
+- **Automatic cleanup:** Guards and all related data (assessments, alerts) are deleted
+  after the retention period
+- **Manual deletion:** Users can cancel guards at any time via API
+
+### Why persistence is necessary (G7)
+Guard Mode monitors environmental decisions over time and must:
+- Track when a guard was created and its baseline assessment
+- Compare new assessments against previous ones
+- Detect material decision changes (e.g., "conditions worsened")
+- Generate alerts only when decisions materially change
+- Show decision history for transparency
+
+This requires **minimal state persistence** to function, unlike request-only mode.
 
 ## G3: Privacy-by-Design
 
