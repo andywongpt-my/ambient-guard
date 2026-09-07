@@ -15,6 +15,11 @@ All evidence is sanitized (tokens redacted, addresses/coords coarsened).
 | [`evidence/M6_demo_ui.md`](M6_demo_ui.md) | M6 · Captions | Describes the screenshots/GIFs and how they were produced (`scripts/shot.py`, `scripts/record.py`) |
 | [`evidence/M7_reliability_security_privacy.md`](M7_reliability_security_privacy.md) | M7 · Reliability/security/privacy | 44 passed/1 skipped (+ live); security + privacy findings (no secrets, no persistence) |
 
+| [`evidence/milestones/G1/G1_report.md`](milestones/G1/G1_report.md) | G1 · Vertical Slice | Full end-to-end verification: real Bee → context → environment → grounded recommendation; all PASS criteria documented |
+| [`evidence/milestones/G1/live_assess_response.json`](milestones/G1/live_assess_response.json) | G1 · Live API response | Raw JSON from `POST /api/v1/assess` showing `bee_mode=mcp` and complete assessment |
+| [`evidence/milestones/G2/G2_implementation.md`](milestones/G2/G2_implementation.md) | G2 · Environmental Intelligence | Alternative-time reasoning with activity-aware evaluation; AQI standard explicit; structured explanation data |
+| [`evidence/milestones/G2/verification_output.txt`](milestones/G2/verification_output.txt) | G2 · Local verification | Python verification script output showing window scoring and alternative selection |
+
 ## Live proof (not a file — verify anytime)
 - **Public URL:** [bee.andywongpt.com](https://bee.andywongpt.com) — `POST /api/v1/assess` returns
   `bee_mode=mcp`, `activity=jogging` (from real Bee todo id 28703772), grounded recommendation

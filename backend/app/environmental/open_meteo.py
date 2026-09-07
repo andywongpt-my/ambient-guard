@@ -96,6 +96,14 @@ class OpenMeteoProvider:
             val = arr[idx]
             if not isinstance(val, (int, float)):
                 continue                        # validation: reject non-numeric
+            
+            # G2.1: AQI standard attribution and quality classification
+            aqi_standard = None
+            quality = None
+            if metric == "aqi":
+                aqi_standard = "us_epa"  # Open-Meteo's us_aqi field is US EPA standard
+                quality = self._classify_aqi_quality(float(val))
+            
             out.append(Observation(
                 metric=metric, value=float(val), unit=unit, kind=kind,
                 source=ObservationSource(
@@ -103,8 +111,31 @@ class OpenMeteoProvider:
                     latitude=lat, longitude=lon,
                     attribution="Open-Meteo (CC BY 4.0)",
                 ),
+                aqi_standard=aqi_standard,
+                quality=quality,
             ))
         return out
+    
+    @staticmethod
+    def _classify_aqi_quality(aqi: float) -> str:
+        """Classify US EPA AQI into quality categories.
+        
+        Sources:
+        - US EPA: https://www.airnow.gov/aqi/aqi-basics/
+        - WHO: https://www.who.int/publications/i/item/9789240034228
+        """
+        if aqi <= 50:
+            return "good"
+        elif aqi <= 100:
+            return "moderate"
+        elif aqi <= 150:
+            return "unhealthy_sensitive"
+        elif aqi <= 200:
+            return "unhealthy"
+        elif aqi <= 300:
+            return "very_unhealthy"
+        else:
+            return "hazardous"
 
     def fetch(self, latitude: float, longitude: float,
               when: datetime | None = None) -> list[Observation]:

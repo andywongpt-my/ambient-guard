@@ -138,7 +138,10 @@ class AssessRequest(BaseModel):
 
 @app.post("/api/v1/assess")
 def assess(req: AssessRequest) -> dict:
-    """Full vertical slice: Bee -> ContextIntent -> environment -> one grounded recommendation."""
+    """Full vertical slice: Bee -> ContextIntent -> environment -> one grounded recommendation.
+    
+    G2: Enhanced with alternative-time analysis and structured explanation data.
+    """
     client = get_bee_client()
     try:
         today = client.today_context()
@@ -159,8 +162,15 @@ def assess(req: AssessRequest) -> dict:
                             detail="No location available (no recent Bee location and no lat/lon or AMBIENT_GUARD_DEFAULT_LOCATION).")
 
     observations, provider_errors = _env_service.observe(lat, lon, when=intent.planned_time)
+    
+    # G2: Pass observe_func for alternative window analysis
     try:
-        assessment = ReasoningEngine().assess(intent, observations, provider_errors)
+        assessment = ReasoningEngine().assess(
+            intent, observations, provider_errors,
+            observe_func=_env_service.observe,
+            lat=lat,
+            lon=lon,
+        )
     except ReasoningError as e:
         raise HTTPException(status_code=502, detail=f"Environmental data unavailable: {e}") from e
 
