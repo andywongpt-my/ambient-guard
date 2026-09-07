@@ -316,6 +316,21 @@ async def start_scheduler() -> dict[str, Any]:
     return scheduler.get_status() if scheduler else {"running": False}
 
 
+@router.post("/reassess")
+async def reassess_guards() -> dict[str, Any]:
+    """Manually trigger guard reassessment.
+    
+    Reassesses all active guards and detects material changes.
+    """
+    lifecycle = GuardLifecycle()
+    
+    try:
+        stats = await lifecycle.reassess_active_guards()
+        return stats
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+
 @router.post("/maintenance/run")
 async def run_maintenance() -> dict[str, Any]:
     """Manually trigger maintenance tasks.
