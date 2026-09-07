@@ -74,3 +74,26 @@ Bee context "I plan to jog at 5 PM"
 
 - Keep a **captured-real-data snapshot** of the hero pipeline (recorded earlier same day) as backup, labeled real-but-cached — **never fabricate readings**.
 - If one provider is down, show the fallback/attribution behavior honestly as a reliability feature.
+
+
+---
+
+## Live reconciliation (M8 — matches the shipped product)
+
+The plan above still holds; notes for demoing the LIVE site [bee.andywongpt.com](https://bee.andywongpt.com):
+
+- **Intent source:** the live hero intent comes from a real Bee **todo** ("Go jogging at 5 PM",
+  id 28703772) via `activeTodos`, since spoken-conversation capture has sync lag and `bee_search`
+  is currently unreliable server-side (FR-007). The recommendation, environment, and location are
+  all live/real. A spoken-conversation capture can be shown as an even-more-authentic variant if it
+  has synced.
+- **Timeline panel** now shows two label columns — **Data** (observed/forecast) and **Exposure**
+  (estimate — location/API-based, never a personal measurement), and highlights the planned hour
+  when it falls in the window. For the demo, request a window that includes the planned time.
+- **Latency:** live assess is slower than local (~few s) due to the Cloudflare Tunnel + MCP
+  round-trip to real Bee — narrate over it or pre-warm with one call before recording.
+- **Evidence to show:** `evidence/screenshots/M6_demo_flow_live.gif` is the recorded live flow;
+  `evidence/INDEX.md` maps all evidence.
+- **Pre-demo:** confirm `curl -s -XPOST https://bee.andywongpt.com/api/v1/assess -d '{}'` returns
+  `bee_mode=mcp` + `activity=jogging`; if the server Bee token expired, re-run the keyring-unlock
+  login (see `docs/DEPLOYMENT.md`).

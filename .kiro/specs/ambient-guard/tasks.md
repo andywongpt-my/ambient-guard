@@ -50,8 +50,8 @@ Legend: [ ] todo · [~] in progress · [x] done · (M#) milestone
 - [x] 7.1 (M7) Full suite 44 passed/1 skipped (+ live Bee test passes); failure/timeout/malformed/E2E covered; security + privacy review done (evidence/M7_reliability_security_privacy.md). Findings: no secrets, no logging of sensitive data, NO persistence of Bee data; 2 non-blocking notes (CORS *, unused DB).
 
 ## Milestone 8 — Competition readiness
-- [ ] 8.1 (M8) Public repo, license, README, ARCHITECTURE, compliance matrix, feedback, friction log
-- [ ] 8.2 (M8) Demo script + evidence + sub-3-minute demo plan
+- [x] 8.1 (M8) Public repo + MIT license + README + ARCHITECTURE; compliance matrix finalized (all 3 tracks Met, Task Runner honestly marked N/A); PRODUCT_FEEDBACK completed; FRICTION_LOG FR-001–007
+- [x] 8.2 (M8) Demo script reconciled to the live product; evidence/INDEX.md maps all evidence; live site verified (bee_mode=mcp)
 
 ## First vertical slice (spans M1–M4)
 REAL BEE DATA → CONTEXT EXTRACTION → ENVIRONMENTAL DATA → REASONING → ONE GROUNDED RECOMMENDATION
