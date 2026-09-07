@@ -452,7 +452,7 @@ _Completed near submission._
 
 ## Total genuine friction events
 - S1: 2
-- S2: 3
+- S2: 4
 - S3: 2
 - S4: 0
 
@@ -466,3 +466,50 @@ Host/Origin allow-list (or trusted-interface bind) for the MCP HTTP transport.
 
 ## Most valuable tool experience
 To be completed from actual development experience near submission.
+
+---
+
+## FR-008 — No programmatic Bee todo creation from agent sessions
+
+**Date / Time**: 2026-09-07 ~14:50 MYT
+**Tool / API / SDK**: Bee CLI (`@beeai/cli`) · v0.7.3; Bee MCP tools
+
+### Task attempted
+Create a real Bee todo entry ("Go jogging at 5 PM") programmatically from an agent session to demonstrate live personal context integration (G3).
+
+### Why this mattered
+G3 (Personal Context Intelligence) was designed to demonstrate constraint detection against a real conflicting Bee entry. Without programmatic creation, the agent cannot set up the conflict scenario autonomously.
+
+### Steps taken
+1. Checked `bee --help` for a `todo` subcommand.
+2. Checked `bee todo --help` — only `list` exists.
+3. Queried MCP `tools/list` for `bee_create_todo`.
+4. Verified the tool exists but is not wired into the Ambient Guard Bee client.
+
+### Expected result
+An agent should be able to create a Bee todo programmatically (CLI `bee todo add` or MCP `bee_create_todo`) to set up demo scenarios.
+
+### Actual result
+- Bee CLI has `bee todo list` but no `bee todo add` command.
+- `bee_create_todo` MCP tool exists but is not exposed through the standard client surface used by Ambient Guard.
+
+### Severity
+**S2 — Moderate.** Workaround exists (user creates todo manually via wearable/app), but it blocks autonomous demo setup and limits agent-driven workflows.
+
+### Evidence
+`bee todo --help`: `list` subcommand only. G3 certification proceeded with manual todo creation.
+
+### Root cause
+Feature gap: Bee CLI/MCP surface does not expose write operations for todos to agent consumers.
+
+### Workaround
+User manually creates the todo via the Bee wearable/app interface. The agent then reads it back via `bee_get_today` (activeTodos).
+
+### Outcome
+**Partially resolved.** Agent can read existing todos but cannot create them autonomously.
+
+### Development impact
+Minor — G3 certification completed with manual setup. Would block fully autonomous agent workflows.
+
+### Actionable suggestion
+Add `bee todo add` to CLI and/or wire `bee_create_todo` into the MCP client surface so agents can manage todo entries programmatically.
