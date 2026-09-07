@@ -35,6 +35,19 @@ _env_service = EnvironmentalService()
 _STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
 
 
+def _safe_search(client, query: str | None, limit: int):
+    """bee_search is a SUPPLEMENTARY intent source and is currently prone to
+    server-side hangs (see FRICTION_LOG FR-007). today-context + activeTodos already
+    carry the intent, so a search failure must NOT break the pipeline — swallow it
+    and continue with the rest of the context."""
+    if not query:
+        return None, None
+    try:
+        return client.search(query, limit=limit), None
+    except BeeError as e:
+        return None, f"bee_search unavailable: {e}"
+
+
 class Health(BaseModel):
     status: str
     bee_mode: str
@@ -85,12 +98,15 @@ def context(
     try:
         today = client.today_context()
         location = client.current_location()
-        search = client.search(query, limit=limit) if query else None
     except BeeError as e:
         raise HTTPException(status_code=502, detail=f"Bee integration error: {e}") from e
+    search, search_err = _safe_search(client, query, limit)
 
     intent = normalize(today, location, search)
-    return {"bee_mode": os.getenv("AMBIENT_GUARD_BEE_MODE", "mock"), "context": intent.model_dump(mode="json")}
+    out = intent.model_dump(mode="json")
+    if search_err:
+        out.setdefault("notes", []).append(search_err)
+    return {"bee_mode": os.getenv("AMBIENT_GUARD_BEE_MODE", "mock"), "context": out}
 
 
 @app.get("/api/v1/environment")
@@ -120,9 +136,9 @@ def assess(req: AssessRequest) -> dict:
     try:
         today = client.today_context()
         location = client.current_location()
-        search = client.search(req.query, limit=5) if req.query else None
     except BeeError as e:
         raise HTTPException(status_code=502, detail=f"Bee integration error: {e}") from e
+    search, _search_err = _safe_search(client, req.query, 5)
 
     intent = normalize(today, location, search)
     if req.intent_override:

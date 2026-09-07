@@ -73,3 +73,24 @@ def test_full_assess_slice_mock(monkeypatch):
     assert len(a["recommendation"]["evidence"]) >= 1          # guardrail
     assert a["recommendation"]["text"]
     assert any(o["metric"] == "aqi" for o in a["observations"])
+
+
+@respx.mock
+def test_assess_survives_failing_search(monkeypatch):
+    # FR-007: a hanging/failing bee_search must NOT break the pipeline — today-context
+    # (mock hero fixture) still carries the intent.
+    monkeypatch.setenv("AMBIENT_GUARD_BEE_MODE", "mock")
+    from app.bee.client import MockBeeClient
+    from app.bee import BeeError as _BeeError
+
+    def _boom(self, *a, **k):
+        raise _BeeError("simulated bee_search hang")
+    monkeypatch.setattr(MockBeeClient, "search", _boom)
+    respx.get(_FORECAST_URL).mock(return_value=httpx.Response(200, json={
+        "hourly": {"time": ["2026-09-07T17:00"], "temperature_2m": [30.0], "uv_index": [5.0]}}))
+    respx.get(_AIR_URL).mock(return_value=httpx.Response(200, json={
+        "hourly": {"time": ["2026-09-07T17:00"], "pm2_5": [20.0], "us_aqi": [55]}}))
+    r = TestClient(app).post("/api/v1/assess", json={})
+    assert r.status_code == 200, r.text          # not 502 despite search failing
+    a = r.json()["assessment"]
+    assert a["context"]["activity"] == "jogging"  # from today-context, not search

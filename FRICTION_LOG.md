@@ -368,6 +368,58 @@ CLI commands to MCP tools doesn't hit a rejected-argument error.
 
 ---
 
+## FR-007 — `bee_search` hangs (0 bytes, timeout), which broke the app pipeline
+
+**Date / Time**: 2026-09-07 12:55 MYT
+**Tool / API / SDK**: Bee MCP tool `bee_search` · v0.7.3 · Fedora 43 (`meow`), live prod account
+
+### Task attempted
+Search the Bee feed for a "jog" intent phrase (a supplementary intent source), via `bee_search`.
+
+### Why this mattered
+`/api/v1/context` and `/api/v1/assess` called `bee_search` as one intent source; when it hangs
+the whole request failed with a 502.
+
+### Steps taken
+Repeated `bee_search {query:"jog"}` with 12s and 30s timeouts, while `bee_status` and
+`bee_get_today` on the same server responded normally.
+
+### Expected result
+`bee_search` returns promptly (empty or with hits) like the other read tools.
+
+### Actual result
+Timed out with **0 bytes received** (12s and 30s), repeatedly; connection dropped
+("Server disconnected without sending a response"). `bee_status` and `bee_get_today` were
+healthy in the same runs — specific to the search path.
+
+### Severity
+**S2 — Moderate.** One tool intermittently hangs; the app can route around it since
+today-context + activeTodos already carry the intent.
+
+### Evidence
+`curl: (28) Operation timed out after 30002 milliseconds with 0 bytes received` on
+`bee_search` while `bee_get_today` returned a full payload the same run.
+
+### Root cause
+`Root cause not conclusively identified` client-side — the server-side BM25 search stalls for
+this account/query; not a client/transport fault (other tools healthy).
+
+### Workaround
+Made `bee_search` a **best-effort** call (`_safe_search`): on BeeError it is swallowed and the
+pipeline continues with today-context + activeTodos, so the endpoints no longer 502.
+
+### Outcome
+**Resolved (app-side).** The underlying `bee_search` hang remains a Bee-side issue.
+
+### Development impact
+Blocked the live jog-hero verification until the app was made search-resilient; small fix.
+
+### Actionable suggestion
+`bee mcp serve-http` should apply a server-side timeout to `bee_search` and return an explicit
+error instead of hanging with no response, so clients fall back promptly.
+
+---
+
 # Submission Review Checklist
 
 Before submitting this friction log:
@@ -400,7 +452,7 @@ _Completed near submission._
 
 ## Total genuine friction events
 - S1: 2
-- S2: 2
+- S2: 3
 - S3: 2
 - S4: 0
 
