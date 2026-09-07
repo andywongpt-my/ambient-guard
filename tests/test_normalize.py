@@ -128,6 +128,19 @@ def test_hero_scenario_full_extraction():
     assert intent.source_ref.provider == "bee"
 
 
+def test_active_todo_as_intent_source_with_alarm():
+    # No conversation/search intent; a real Bee todo "Go jogging at 5 PM" with an
+    # alarm_at drives both activity and planned_time.
+    from datetime import timezone
+    alarm_ms = int(datetime(2026, 9, 7, 17, 0, tzinfo=timezone.utc).timestamp() * 1000)
+    today = BeeTodayContext(activeTodos=[{"id": 99, "text": "Go jogging at 5 PM", "alarm_at": alarm_ms}])
+    intent = normalize(today, _loc(recent=True), now=NOW)
+    assert intent.activity == "jogging"
+    assert intent.planned_time is not None
+    assert intent.source_ref.ref_id == "99"
+    assert any("todo alarm" in n or "planned_time parsed" in n for n in intent.notes)
+
+
 # --- endpoint (mock mode) ---------------------------------------------------
 def test_context_endpoint_mock(monkeypatch):
     monkeypatch.setenv("AMBIENT_GUARD_BEE_MODE", "mock")
