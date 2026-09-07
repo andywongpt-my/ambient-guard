@@ -10,6 +10,7 @@ Privacy considerations:
 """
 from __future__ import annotations
 
+import json
 import os
 from datetime import datetime, timedelta
 from typing import Any
@@ -142,7 +143,7 @@ class GuardStore:
                 guard.expires_at,
                 guard.next_assessment_at,
                 guard.assessment_count,
-                guard.metadata,
+                json.dumps(guard.metadata) if guard.metadata else "{}",
             )
         return guard
     
@@ -233,13 +234,13 @@ class GuardStore:
                 assessment.assessment_number,
                 assessment.decision_state,
                 assessment.severity,
-                assessment.environmental_summary,
-                assessment.candidate_windows,
-                assessment.reason_codes,
-                assessment.personal_constraints,
-                assessment.personal_feasibility,
+                json.dumps(assessment.environmental_summary) if assessment.environmental_summary else "{}",
+                json.dumps(assessment.candidate_windows) if assessment.candidate_windows else "[]",
+                json.dumps(assessment.reason_codes) if assessment.reason_codes else "[]",
+                json.dumps(assessment.personal_constraints) if assessment.personal_constraints else "[]",
+                json.dumps(assessment.personal_feasibility) if assessment.personal_feasibility else "null",
                 assessment.assessed_at,
-                assessment.data_quality,
+                json.dumps(assessment.data_quality) if assessment.data_quality else "{}",
             )
         return assessment
     
@@ -280,8 +281,8 @@ class GuardStore:
                 alert.previous_state,
                 alert.new_state,
                 alert.change_type.value,
-                alert.reason_codes,
-                alert.evidence,
+                json.dumps(alert.reason_codes) if alert.reason_codes else "[]",
+                json.dumps(alert.evidence) if alert.evidence else "{}",
                 alert.acknowledged,
                 alert.acknowledged_at,
                 alert.created_at,
