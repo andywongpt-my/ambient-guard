@@ -1,16 +1,32 @@
-# Ambient Guard — Docker Compose (single backend service).
+# Ambient Guard — Docker Compose.
 # Dedicated project name + non-standard HOST port so it does not collide with the
 # ~10 containers already running on the `meow` server. Public route is fronted by a
 # Cloudflare Tunnel -> 127.0.0.1:18080 (see docs/DEPLOYMENT.md). See RISK_REGISTER R6.
 #
-# NOTE: no database service — the app persists NOTHING (all Bee data is in-memory
-# per request; verified in the M7 review). A Postgres service can be re-added later
-# WITH an explicit retention policy if a real persistence need arises.
+# G7: PostgreSQL added for guard persistence with explicit 7-day retention policy.
 name: ambient-guard
 
 services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ambientguard
+      POSTGRES_PASSWORD: ${AMBIENT_GUARD_DB_PASSWORD:-ambientguard}
+      POSTGRES_DB: ambientguard
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ambientguard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   backend:
     build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
       AMBIENT_GUARD_BEE_MODE: ${AMBIENT_GUARD_BEE_MODE:-mock}
       # For mcp mode: the host runs `bee mcp serve-http` on 127.0.0.1:8790.
@@ -21,6 +37,8 @@ services:
       AMBIENT_GUARD_DEFAULT_LOCATION: ${AMBIENT_GUARD_DEFAULT_LOCATION:-}
       # CORS allow-list (M7); comma-separated. Omit to use the code default.
       AMBIENT_GUARD_CORS_ORIGINS: ${AMBIENT_GUARD_CORS_ORIGINS:-}
+      # G7: Database connection for guard persistence
+      AMBIENT_GUARD_DATABASE_URL: postgresql://ambientguard:${AMBIENT_GUARD_DB_PASSWORD:-ambientguard}@db:5432/ambientguard
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
@@ -29,3 +47,6 @@ services:
     logging:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
+
+volumes:
+  pgdata:

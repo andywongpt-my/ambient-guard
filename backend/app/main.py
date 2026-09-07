@@ -4,10 +4,14 @@ M1.2: the Bee integration layer is wired in — GET /api/v1/bee/context returns 
 Bee data (today-context + current location + optional search) via the backend
 selected by AMBIENT_GUARD_BEE_MODE. The full assess pipeline (context normalization
 -> environment -> reasoning) lands in M2-M4.
+
+G7: Guard Mode adds proactive environmental monitoring with background scheduler.
 """
 from __future__ import annotations
 
+import logging
 import os
+from contextlib import asynccontextmanager
 from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, Query
@@ -22,8 +26,44 @@ from app.agent.timeline import build_timeline
 from app.bee import BeeError, get_bee_client
 from app.bee.models import BeeSearchResult
 from app.environmental import EnvironmentalService
+from app.routers import guards as guards_router
+from app.guards import start_guard_scheduler, stop_guard_scheduler
 
-app = FastAPI(title="Ambient Guard", version="0.6.0")
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan manager - startup and shutdown events."""
+    # Startup
+    logger.info("Ambient Guard starting up...")
+    
+    # Start guard scheduler (G7)
+    # Only start if database is configured
+    if os.getenv("AMBIENT_GUARD_DATABASE_URL"):
+        try:
+            await start_guard_scheduler()
+            logger.info("Guard scheduler started")
+        except Exception as e:
+            logger.warning(f"Could not start guard scheduler: {e}")
+    else:
+        logger.info("Guard scheduler skipped - no database configured")
+    
+    yield
+    
+    # Shutdown
+    logger.info("Ambient Guard shutting down...")
+    await stop_guard_scheduler()
+    logger.info("Guard scheduler stopped")
+
+
+app = FastAPI(
+    title="Ambient Guard",
+    version="0.7.0",
+    lifespan=lifespan,
+)
 
 # CORS: explicit allow-list (M7). Defaults cover the live public origin + local dev;
 # override via AMBIENT_GUARD_CORS_ORIGINS (comma-separated). No wildcard.
@@ -34,9 +74,12 @@ _cors_origins = [o.strip() for o in
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["Content-Type"],
 )
+
+# Include G7 guard router
+app.include_router(guards_router.router)
 
 _env_service = EnvironmentalService()
 _STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
@@ -58,11 +101,21 @@ def _safe_search(client, query: str | None, limit: int):
 class Health(BaseModel):
     status: str
     bee_mode: str
+    guard_mode: str
 
 
 @app.get("/health", response_model=Health)
 def health() -> Health:
-    return Health(status="ok", bee_mode=os.getenv("AMBIENT_GUARD_BEE_MODE", "mock"))
+    from app.guards import get_guard_scheduler
+    
+    scheduler = get_guard_scheduler()
+    guard_status = "active" if scheduler and scheduler.get_status()["running"] else "inactive"
+    
+    return Health(
+        status="ok",
+        bee_mode=os.getenv("AMBIENT_GUARD_BEE_MODE", "mock"),
+        guard_mode=guard_status,
+    )
 
 
 @app.get("/api/v1/bee/context")
