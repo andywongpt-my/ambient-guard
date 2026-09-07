@@ -33,6 +33,8 @@ class Observation(BaseModel):
     unit: str
     kind: Kind
     source: ObservationSource
+    aqi_standard: str | None = None  # "us_epa" | "european_aqi" | None — explicit when metric=="aqi"
+    quality: str | None = None       # "good" | "moderate" | "unhealthy_sensitive" | "unhealthy" | "very_unhealthy" | "hazardous"
 
 
 class Provider(Protocol):

@@ -1,0 +1,31 @@
+﻿=== G2 Implementation Verification ===
+
+1. Activity Policy
+   Jogging AQI importance: high
+   Jogging is outdoor: True
+   Jogging exertion: high
+
+2. Important Metrics for Jogging
+   Ordered by importance: ['aqi', 'pm25', 'uv', 'temp_c']...
+
+3. Observation Evaluation
+   AQI 119 for jogging: severity=caution, score=0.69
+
+4. Window Scoring
+   Score: 0.259
+   Severity: caution
+   Data kind: forecast
+
+5. Alternative Window Finding
+   Planned time: 21:48
+   Planned severity: warning
+   Alternatives found: 5
+   Recommended time: 23:48
+   Reason codes: ['better_conditions:aqi,pm25,uv', 'severity_improved:warning->info']
+   Limitations: ['Missing data for: temp_c, humidity, wind_kmh, precip_mm']
+
+6. No Better Window Case
+   Reason codes: ['no_better_window_in_range']
+   Recommended time: None
+
+=== All G2 Verification Passed ===

@@ -2,6 +2,8 @@
 
 A Recommendation MUST carry >=1 Evidence item (FR-4.2), enforced by the engine.
 Assessment is the full pipeline output returned by /api/v1/assess.
+
+G2.6: Enhanced with structured explanation data for full reconstructability.
 """
 from __future__ import annotations
 
@@ -19,6 +21,31 @@ class Evidence(BaseModel):
     severity: str                # "info" | "caution" | "warning"
 
 
+class PlannedWindow(BaseModel):
+    """G2.6: Conditions at the planned activity time."""
+    time: datetime
+    severity: str                # "info" | "caution" | "warning"
+    aqi: float | None = None
+    pm25: float | None = None
+    uv: float | None = None
+    temp_c: float | None = None
+    humidity: float | None = None
+    data_kind: str               # "observed" | "forecast"
+
+
+class AlternativeWindow(BaseModel):
+    """G2.6: A candidate alternative time window."""
+    time: datetime
+    severity: str
+    improvement: float           # Negative = better than planned
+    better_metrics: list[str]
+    worse_metrics: list[str]
+    aqi: float | None = None
+    pm25: float | None = None
+    uv: float | None = None
+    temp_c: float | None = None
+
+
 class Recommendation(BaseModel):
     text: str
     reasoning_summary: str
@@ -32,3 +59,12 @@ class Assessment(BaseModel):
     observations: list[Observation]
     recommendation: Recommendation
     provider_errors: list[str] = []
+    
+    # G2.6: Structured explanation data
+    planned_window: PlannedWindow | None = None
+    alternatives: list[AlternativeWindow] = []
+    # G2.7: Distinguish environmentally-better from personally-recommended
+    environmentally_better_window: datetime | None = None  # Based on environmental evidence only
+    recommended_window: datetime | None = None  # May be None if personal feasibility unknown
+    reason_codes: list[str] = []
+    limitations: list[str] = []
