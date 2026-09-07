@@ -342,6 +342,6 @@ class TestDeterministicRecommendation:
             now=now,
         )
         
-        # Planned window should have condition data
-        if comparison.planned_window:
-            assert comparison.planned_window.aqi is not None or comparison.planned_window.pm25 is not None
+        # Planned window should have condition data (access via planned_score.metrics)
+        if comparison.planned_score.metrics:
+            assert comparison.planned_score.metrics.get("aqi") is not None or comparison.planned_score.metrics.get("pm25") is not None
