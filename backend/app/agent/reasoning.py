@@ -108,7 +108,8 @@ class ReasoningEngine:
         
         # G2: Find alternative windows if we have the necessary context
         alternatives: list[AlternativeWindow] = []
-        recommended_time: datetime | None = None
+        environmentally_better_window: datetime | None = None
+        recommended_window: datetime | None = None
         reason_codes: list[str] = []
         limitations: list[str] = []
         
@@ -136,13 +137,39 @@ class ReasoningEngine:
                         temp_c=alt.conditions.get("temp_c").value if "temp_c" in alt.conditions else None,
                     ))
                 
-                recommended_time = comparison.recommended_time
                 reason_codes = comparison.reason_codes
                 limitations = comparison.limitations
                 
+                # G2.7: Distinguish environmentally-better from personally-recommended
+                if comparison.recommended_time:
+                    environmentally_better_window = comparison.recommended_time
+                    reason_codes.append("environmentally_better_window_found")
+                    
+                    # Personal recommendation requires feasibility knowledge
+                    # Check if the recommended time is within reasonable hours (6am-10pm)
+                    rec_hour = comparison.recommended_time.hour
+                    if 6 <= rec_hour <= 22:
+                        # Reasonable time for outdoor activity
+                        recommended_window = comparison.recommended_time
+                        reason_codes.append("personal_recommendation_feasible")
+                    else:
+                        # Late night or early morning - not practical for most users
+                        limitations.append(
+                            f"Environmentally better window at {comparison.recommended_time.strftime('%H:%M')} "
+                            "may not be practical for outdoor activity"
+                        )
+                        reason_codes.append("personal_recommendation_not_feasible")
+                
                 # G2.5: Enhance recommendation text if alternative exists
                 if comparison.recommendation:
-                    text = comparison.recommendation + " " + text
+                    # Use "environmental conditions appear more favorable" language
+                    # rather than "you should exercise at..."
+                    if recommended_window:
+                        text = comparison.recommendation + " " + text
+                    elif environmentally_better_window:
+                        # Environmentally better but not personally recommended
+                        when_str = environmentally_better_window.strftime("%H:%M")
+                        text = f"Environmental conditions appear more favorable later around {when_str}. " + text
                     
             except Exception as e:
                 # Alternative-finding failure should not break the main assessment
@@ -165,7 +192,9 @@ class ReasoningEngine:
             # G2.6: Structured explanation data
             planned_window=planned_window,
             alternatives=alternatives,
-            recommended_time=recommended_time,
+            # G2.7: Distinguish environmentally-better from personally-recommended
+            environmentally_better_window=environmentally_better_window,
+            recommended_window=recommended_window,
             reason_codes=reason_codes,
             limitations=limitations,
         )

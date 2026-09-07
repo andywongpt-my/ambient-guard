@@ -63,6 +63,8 @@ class Assessment(BaseModel):
     # G2.6: Structured explanation data
     planned_window: PlannedWindow | None = None
     alternatives: list[AlternativeWindow] = []
-    recommended_time: datetime | None = None
+    # G2.7: Distinguish environmentally-better from personally-recommended
+    environmentally_better_window: datetime | None = None  # Based on environmental evidence only
+    recommended_window: datetime | None = None  # May be None if personal feasibility unknown
     reason_codes: list[str] = []
     limitations: list[str] = []
