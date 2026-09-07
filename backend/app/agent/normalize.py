@@ -77,18 +77,25 @@ def _extract_time(text: str, now: datetime) -> datetime | None:
 def _best_intent_text(
     today: BeeTodayContext | None, search: BeeSearchResult | None
 ) -> tuple[str | None, str | None]:
-    """Pick the most intent-bearing phrase + its Bee ref id. Search hits first."""
+    """Pick the most intent-bearing phrase, its Bee ref id, and an optional
+    alarm epoch-ms (from a todo). Search hits first, then conversations, then
+    active todos (which carry a real alarm_at time signal)."""
     if search and search.results:
         top = search.results[0]
         txt = top.get("short_summary") or top.get("summary") or top.get("text")
         if txt:
-            return txt, str(top.get("id")) if top.get("id") is not None else None
+            return txt, (str(top.get("id")) if top.get("id") is not None else None), None
     if today and today.recentConversations:
         for conv in today.recentConversations:
             txt = conv.summary or conv.short_summary
             if txt:
-                return txt, str(conv.id) if conv.id is not None else None
-    return None, None
+                return txt, (str(conv.id) if conv.id is not None else None), None
+    if today and today.activeTodos:
+        for td in today.activeTodos:
+            txt = td.get("text") or td.get("title")
+            if txt:
+                return txt, (str(td.get("id")) if td.get("id") is not None else None), td.get("alarm_at")
+    return None, None, None
 
 
 def normalize(
@@ -103,7 +110,7 @@ def normalize(
     default_location = default_location if default_location is not None \
         else os.getenv("AMBIENT_GUARD_DEFAULT_LOCATION")
 
-    intent_text, ref_id = _best_intent_text(today, search)
+    intent_text, ref_id, alarm_ms = _best_intent_text(today, search)
     notes: list[str] = []
     confidence = 0.0
 
@@ -125,6 +132,13 @@ def normalize(
     if planned_time:
         confidence += 0.2
         notes.append(f"planned_time parsed -> {planned_time.isoformat()}")
+    elif alarm_ms:
+        try:
+            planned_time = datetime.fromtimestamp(alarm_ms / 1000)
+            confidence += 0.2
+            notes.append(f"planned_time from todo alarm -> {planned_time.isoformat()}")
+        except (TypeError, ValueError, OSError):
+            notes.append("todo alarm_at unparseable")
     else:
         notes.append("planned_time not determined")
 
