@@ -12,16 +12,20 @@ Ambient Guard applies **data minimization** to Bee content.
   observations and produce a relevant recommendation.
 
 ### What is stored
-- Normalized, structured context (`ContextIntent`) and derived `Assessment` results, only
-  as needed to render the timeline and recommendation for the session.
+- **Nothing is persisted.** Verified in the M7 review (evidence/M7_reliability_security_privacy.md):
+  the backend has no database code — Bee data (raw or normalized) and assessments are held
+  **in-memory for the single request only** and discarded when the response returns. A Postgres
+  service exists in compose for future use but is currently unused by the app.
 
 ### What is NOT stored
 - Raw Bee recordings, full transcripts, unrelated conversations, unrelated personal
-  information, or full location history. Raw Bee payloads are held **in-memory for the
-  request only** and discarded.
+  information, full location history — and, currently, not even the normalized `ContextIntent`
+  or `Assessment` (no persistence layer is wired).
 
 ### Retention
-- Session/assessment data is short-lived; no long-term retention of raw Bee content.
+- Zero server-side retention today. If persistence is added later, it must come with an
+  explicit, documented retention policy and store normalized structured data only — never raw
+  Bee content.
 
 ## Security controls
 - **No secrets in the repo.** Provider keys and Bee tokens live in env / untracked files;
