@@ -108,7 +108,7 @@ class GuardLifecycle:
             planned_time=intent.planned_time,
             location_lat=intent.latitude,
             location_lon=intent.longitude,
-            location_name=location.display_name if location else None,
+            location_name=location.location.address if location and location.location else None,
             bee_source_type="bee_today_context",
             bee_source_reference=source_ref,
         )
