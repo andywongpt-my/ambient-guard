@@ -37,11 +37,16 @@ Open-Meteo; Bee context is the mock hero fixture.
 
 ![Ambient Guard live demo flow](screenshots/M6_demo_flow_live.gif)
 
-`screenshots/M6_demo_flow_live.gif` (+ `M6_demo_flow_live.mp4`) records the same flow against
-the **live public site** [bee.andywongpt.com](https://bee.andywongpt.com) in `bee_mode=mcp` —
-real Bee data end-to-end: `Bee mode: mcp`, live location (Tuaran, Sabah, recent-location=true),
-real Open-Meteo conditions (e.g. AQI 115, PM2.5 43.7), and a grounded recommendation with
-source-attributed `open-meteo (observed)` evidence. Captured via
-`scripts/record.py <out-dir> https://bee.andywongpt.com/`. (The user's real Bee feed has no
-jog phrase, so panel 1 activity is empty until the intent-override step drives a full
-recommendation — this is the no-inference guarantee, not a bug.)
+`screenshots/M6_demo_flow_live.gif` (+ `M6_demo_flow_live.mp4`) records the full flow against
+the **live public site** [bee.andywongpt.com](https://bee.andywongpt.com) in `bee_mode=mcp`,
+showing the complete hero end-to-end from real Bee data:
+- **Context** from the real Bee todo (id 28703772) → `activity=jogging`, `planned_time=17:00`.
+- **Recommendation:** "Jogging at 17:00 is okay with care: AQI 119 is unhealthy for sensitive
+  groups…" — precautionary, not medical, confidence 0.6.
+- **Evidence:** CAUTION "AQI 119 is unhealthy for sensitive groups — aqi 119 AQI (forecast, open-meteo)".
+- **Timeline (M5):** 12-hour table with **Data** (observed/forecast) + **Exposure** (estimate)
+  label columns and the **17:00 ◀ planned** row highlighted.
+
+Captured via `scripts/record.py <out-dir> https://bee.andywongpt.com/ hero`. Live assess is
+slower than local (Cloudflare Tunnel + MCP round-trip to real Bee), so panels populate a few
+seconds after load.
