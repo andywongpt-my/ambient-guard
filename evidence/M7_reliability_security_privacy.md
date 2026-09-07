@@ -50,9 +50,11 @@ provider timeout/malformed, bee_search hang (best-effort), reasoning with zero o
 
 - ✅ No secrets, no logging of sensitive data, no persistence of Bee data.
 - ✅ Failure paths tested; app degrades gracefully (provider errors surfaced; bee_search hang tolerated).
-- 🟡 **CORS `*`** — fine for the current read-only demo; tighten before adding auth or write endpoints.
-- 🟡 **DB is provisioned but unused** — either remove the `db` service until a real persistence need
-  exists, or wire it with an explicit retention policy. Documented as "not persisted" for now.
+- ✅ **CORS tightened** (was `*`) to an explicit env-driven allow-list (default: the live origin +
+  localhost), methods limited to GET/POST — resolved.
+- ✅ **Unused DB removed** — the Postgres `db` service, `depends_on`, `DATABASE_URL`, and `pgdata`
+  volume were dropped from compose; the app persists nothing. Re-add with a retention policy only
+  when a real persistence need exists — resolved.
 - ✅ SECURITY_AND_PRIVACY.md reconciled to match the implementation (no persistence).
 
 Conclusion: Ambient Guard meets M7's reliability, security, and privacy bar for a hackathon
