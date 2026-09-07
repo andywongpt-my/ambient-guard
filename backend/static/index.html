@@ -164,7 +164,7 @@ async function assess() {
 
 async function loadTimeline(lat, lon, planned) {
   try {
-    const q = `${API}/api/v1/timeline?lat=${lat}&lon=${lon}&hours=6` + (planned ? `&planned=${encodeURIComponent(planned)}` : "");
+    const q = `${API}/api/v1/timeline?lat=${lat}&lon=${lon}&hours=12` + (planned ? `&planned=${encodeURIComponent(planned)}` : "");
     const r = await fetch(q);
     const d = await r.json();
     $("timeline").querySelector("tbody").innerHTML = d.entries.map(e => {
