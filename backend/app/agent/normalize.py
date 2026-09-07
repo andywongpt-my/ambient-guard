@@ -131,6 +131,19 @@ def normalize(
     # Location resolution (R3): prefer a recent Bee location; else fall back.
     loc_name = lat = lon = None
     is_recent = None
+
+    def _parse_coords(s: str | None) -> tuple[float | None, float | None]:
+        # Accept "lat,lon" for AMBIENT_GUARD_DEFAULT_LOCATION; else no coords.
+        if not s:
+            return None, None
+        parts = s.split(",")
+        if len(parts) == 2:
+            try:
+                return float(parts[0].strip()), float(parts[1].strip())
+            except ValueError:
+                return None, None
+        return None, None
+
     if location and location.location and location.location.latitude is not None:
         is_recent = location.is_recent
         if location.is_recent:
@@ -146,10 +159,13 @@ def normalize(
             )
             if default_location:
                 loc_name = default_location
-                # keep Bee coords as a hint even when stale
-                lat, lon = location.location.latitude, location.location.longitude
+                # prefer coords parsed from the fallback; else keep stale Bee coords as a hint
+                flat, flon = _parse_coords(default_location)
+                lat = flat if flat is not None else location.location.latitude
+                lon = flon if flon is not None else location.location.longitude
     elif default_location:
         loc_name = default_location
+        lat, lon = _parse_coords(default_location)
         notes.append("no Bee location; using AMBIENT_GUARD_DEFAULT_LOCATION")
     else:
         notes.append("location not determined")

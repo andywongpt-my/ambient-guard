@@ -91,6 +91,22 @@ def test_location_stale_no_fallback_stays_none():
     assert intent.location is None
 
 
+def test_default_location_coords_when_no_bee_location():
+    # No Bee location at all + "lat,lon" fallback -> coords flow (so assess can run).
+    from app.bee.models import BeeCurrentLocation
+    empty_loc = BeeCurrentLocation(location=None, is_recent=False)
+    intent = normalize(_today("jog at 5 PM"), empty_loc, now=NOW, default_location="6.183,116.22")
+    assert intent.location == "6.183,116.22"
+    assert intent.latitude == pytest.approx(6.183)
+    assert intent.longitude == pytest.approx(116.22)
+
+
+def test_default_location_coords_when_bee_stale():
+    intent = normalize(_today("jog at 5 PM"), _loc(recent=False), now=NOW, default_location="1.5,103.6")
+    assert intent.latitude == pytest.approx(1.5)
+    assert intent.longitude == pytest.approx(103.6)
+
+
 # --- no unsupported inference (FR-2.3) --------------------------------------
 def test_no_inference_when_context_empty():
     intent = normalize(BeeTodayContext(), _loc(recent=True), now=NOW, default_location=None)
