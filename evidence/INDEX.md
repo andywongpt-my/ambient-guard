@@ -22,8 +22,10 @@ This directory contains evidence and documentation for Ambient Guard milestones.
 - **Live Assessment:** [milestones/G3/live_assess_response.json](milestones/G3/live_assess_response.json)
 
 ### G4: Demo Experience & Personal Environmental UI
-- **Status:** IMPLEMENTED (pending deployment verification)
+- **Status:** PASS ✅
 - **Certification:** [milestones/G4/G4_certification.md](milestones/G4/G4_certification.md)
+- **Live Evidence:** [milestones/G4/live_assess_response.json](milestones/G4/live_assess_response.json)
+- **Backend Tests:** [milestones/G4/backend_tests.txt](milestones/G4/backend_tests.txt)
 
 ## Milestone Documents (M1-M7)
 
@@ -52,4 +54,4 @@ This directory contains evidence and documentation for Ambient Guard milestones.
 ---
 
 **Last Updated:** 2026-09-07  
-**Current Gate:** G3 PASS
+**Current Gate:** G4 PASS ✅

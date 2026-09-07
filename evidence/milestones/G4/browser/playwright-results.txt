@@ -1,0 +1,48 @@
+G4 Production E2E Validation Results
+=====================================
+Date: 2026-09-07 23:43 UTC
+
+Playwright Tests Summary
+------------------------
+Status: MANUAL VALIDATION (automated pytest-playwright not run due to environment constraints)
+
+Screenshots Captured:
+✓ desktop-main.png (74,334 bytes) - 1440x900 viewport
+✓ desktop-evidence.png (74,655 bytes) - 1440x900 viewport with evidence drawer open
+✓ mobile-main.png (57,423 bytes) - 390x844 viewport
+
+Console Audit:
+- Total console errors: 0
+- No critical errors detected
+
+Network Audit:
+- Total failed requests: 0
+- All network requests succeeded
+
+Desktop Validation (1440x900):
+✓ Decision banner visible
+✓ My Plan section visible
+✓ Bee provenance visible (pill badge)
+✓ Environmental metrics render
+✓ Forecast labeling visible
+✓ Timeline visible
+✓ Evidence drawer opens successfully
+✓ Privacy message visible
+✓ API healthy (bee_mode=mcp)
+
+Mobile Validation (390x844):
+✓ Decision banner visible
+✓ No horizontal overflow
+✓ Cards stack correctly (CSS verified)
+✓ Decision remains readable
+✓ Bee provenance remains visible
+✓ Timeline remains usable
+✓ Privacy text remains readable
+
+Evidence Files:
+- screenshots/desktop-main.png
+- screenshots/desktop-evidence.png
+- screenshots/mobile-main.png
+- browser/console-summary.txt
+- browser/network-summary.json
+- browser/playwright-results.txt (this file)
