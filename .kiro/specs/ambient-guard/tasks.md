@@ -47,7 +47,7 @@ Legend: [ ] todo · [~] in progress · [x] done · (M#) milestone
 - [x] 6.2 (M6) Wired to POST /api/v1/assess + GET /api/v1/timeline; CORS enabled. (Next.js rewrite deferred — static UI chosen for a zero-dependency, memory-safe demo; upgrade path noted in design.md.)
 
 ## Milestone 7 — Reliability
-- [ ] 7.1 (M7) Complete unit/integration/failure/E2E suites; security + privacy review
+- [x] 7.1 (M7) Full suite 44 passed/1 skipped (+ live Bee test passes); failure/timeout/malformed/E2E covered; security + privacy review done (evidence/M7_reliability_security_privacy.md). Findings: no secrets, no logging of sensitive data, NO persistence of Bee data; 2 non-blocking notes (CORS *, unused DB).
 
 ## Milestone 8 — Competition readiness
 - [ ] 8.1 (M8) Public repo, license, README, ARCHITECTURE, compliance matrix, feedback, friction log
