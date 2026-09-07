@@ -1,20 +1,27 @@
 {
-  "date": "2026-09-07",
+  "date": "2026-09-08",
   "todayBrief": { "calendar_events": [], "emails": [], "timezone": "Asia/Kuching" },
   "dailySummary": null,
-  "activeTodos": [],
+  "activeTodos": [
+    {
+      "id": "todo-123",
+      "title": "Go jogging at 5 PM",
+      "due_date": "2026-09-08",
+      "status": "pending"
+    }
+  ],
   "recentNotes": [],
   "recentConversations": [
     {
       "id": 10346999,
-      "start_time": 1788700000000,
-      "end_time": 1788700600000,
+      "start_time": 1788817200000,
+      "end_time": 1788820800000,
       "device_type": "wearable",
-      "summary": "Andy mentions he plans to go jogging at 5 PM.",
-      "short_summary": "Andy plans to jog at 5 PM.",
+      "summary": "Andy mentions he plans to go jogging at 5 PM today.",
+      "short_summary": "Andy plans to jog at 5 PM today.",
       "state": "COMPLETED",
-      "created_at": 1788700000100,
-      "updated_at": 1788700600100,
+      "created_at": 1788800000100,
+      "updated_at": 1788800600100,
       "utterances_count": 6,
       "primary_location": null
     }
