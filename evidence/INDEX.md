@@ -15,6 +15,12 @@ This directory contains evidence and documentation for Ambient Guard milestones.
 - **Implementation:** [milestones/G2/G2_implementation.md](milestones/G2/G2_implementation.md)
 - **Live Evidence:** [milestones/G2/live/](milestones/G2/live/)
 
+### G3: Personal Context Intelligence
+- **Status:** PASS
+- **Certification:** [milestones/G3/G3_certification.md](milestones/G3/G3_certification.md)
+- **Live Context:** [milestones/G3/live_bee_context.json](milestones/G3/live_bee_context.json)
+- **Live Assessment:** [milestones/G3/live_assess_response.json](milestones/G3/live_assess_response.json)
+
 ## Milestone Documents (M1-M7)
 
 | ID | Title | Document |
@@ -41,5 +47,5 @@ This directory contains evidence and documentation for Ambient Guard milestones.
 
 ---
 
-**Last Updated:** 2026-09-07
-**Current Gate:** G2 PASS
+**Last Updated:** 2026-09-07  
+**Current Gate:** G3 PASS

@@ -1,0 +1,40 @@
+{
+  "bee_mode": "mcp",
+  "today_context": {
+    "date": "2026-09-07",
+    "todayBrief": {
+      "calendar_events": [],
+      "emails": [],
+      "timezone": "Asia/Kuching"
+    },
+    "dailySummary": null,
+    "activeTodos": [
+      {
+        "id": 28703772,
+        "text": "Go jogging at 5 PM",
+        "alarm_at": 1788771600000,
+        "completed": false,
+        "created_at": 1788757369815,
+        "corrections": []
+      }
+    ],
+    "recentNotes": [],
+    "recentConversations": []
+  },
+  "current_location": {
+    "location": {
+      "id": 314803362,
+      "latitude": 6.183041550225851,
+      "longitude": 116.2201045731561,
+      "address": "Lorong Eko Tropicana, Tuaran, Sabah, Tuaran, 89250, Malaysia, Borneo",
+      "source_device_id": null,
+      "created_at": 1788785291122,
+      "updated_at": 1788785291122
+    },
+    "age_ms": 7428879,
+    "is_recent": false,
+    "recent_threshold_ms": 1800000,
+    "timezone": "Asia/Kuching"
+  },
+  "search": null
+}
