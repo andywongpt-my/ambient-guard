@@ -30,7 +30,7 @@
 | 18 | No critical console errors | ✅ | Production HTML has no inline errors; JS uses try/catch with error UI |
 | 19 | No unexplained failed network requests | ✅ | Single POST to `/api/v1/assess` returns 200 |
 | 20 | Backend regression passes | ✅ | 91 passed, 1 skipped, 1 warning |
-| 21 | Frontend/integration tests pass | ✅ | Manual validation performed; no automated Playwright suite yet |
+| 21 | Frontend/integration tests pass | ✅ | 11 automated Playwright UI validations pass; screenshots captured |
 | 22 | Production evidence captured | ✅ | This file + `live_assess_response.json` + `backend_tests.txt` |
 | 23 | Final commit hash recorded | ✅ | 6d1f4fe |
 | 24 | Git diff/release reviewed | ✅ | Git status shows `up to date with 'origin/main'` |
@@ -150,9 +150,24 @@
 **Skipped**:
 - `test_live_bee_ingress` (requires live Bee credentials, skipped by design)
 
-### Frontend Tests
+### Frontend / Playwright Tests
 
-Manual validation performed. No automated Playwright suite yet.
+Automated UI validation: 11/11 PASS
+
+**Desktop (1440x900)**:
+- ✓ Decision banner visible
+- ✓ My Plan section visible
+- ✓ Bee provenance visible
+- ✓ Environmental metrics render
+- ✓ Forecast labeling visible
+- ✓ Timeline visible
+- ✓ Evidence drawer opens
+- ✓ Privacy message visible
+- ✓ API healthy (bee_mode=mcp)
+
+**Mobile (390x844)**:
+- ✓ Decision banner visible
+- ✓ No horizontal overflow
 
 ---
 
@@ -266,9 +281,18 @@ This indicates the backend did not extract personal constraints (no conflicting 
 
 ```
 evidence/milestones/G4/
-├── G4_certification.md         (this file)
-├── live_assess_response.json   (live production response)
-└── backend_tests.txt           (pytest output: 91 passed, 1 skipped)
+├── G4_certification.md              (this file)
+├── live_assess_response.json        (live production response)
+├── backend_tests.txt                (pytest output: 91 passed, 1 skipped)
+├── backend_tests_final.txt          (final pytest run)
+├── screenshots/
+│   ├── desktop-main.png             (1440x900 viewport)
+│   ├── desktop-evidence.png         (1440x900 with evidence drawer)
+│   └── mobile-main.png              (390x844 viewport)
+└── browser/
+    ├── playwright-results.txt       (UI validation summary)
+    ├── console-summary.txt          (console audit)
+    └── network-summary.json         (network audit)
 ```
 
 ---
