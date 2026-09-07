@@ -224,6 +224,50 @@ def test_unknown_feasibility_when_no_context():
     assert "Insufficient personal context" in feasibility.limitations[0]
 
 
+def test_regression_no_known_conflict_vs_unknown_distinction():
+    """G4 regression: Absence of detected conflicts is NOT FEASIBLE without sufficient context.
+    
+    This test verifies the semantic distinction:
+    - FEASIBLE: No conflicts AND has_sufficient_context=True
+    - UNKNOWN: No conflicts AND has_sufficient_context=False
+    
+    Do NOT represent "no conflicts found" as "proven feasible" when context is insufficient.
+    """
+    now = datetime.now().replace(hour=10, minute=0)
+    candidate_time = now.replace(hour=19, minute=0)
+    
+    # Case 1: No conflicts, but also no sufficient context -> UNKNOWN
+    insufficient_context = PersonalContext(
+        constraints=[],
+        preferences=[],
+        has_sufficient_context=False,
+        context_gap="no_relevant_constraints_or_preferences_found",
+    )
+    
+    feasibility_unknown = evaluate_candidate_feasibility(candidate_time, insufficient_context, "jogging")
+    
+    assert feasibility_unknown.status == FeasibilityStatus.UNKNOWN, \
+        "No conflicts + insufficient context must be UNKNOWN, not FEASIBLE"
+    assert "Insufficient personal context" in feasibility_unknown.limitations[0]
+    
+    # Case 2: No conflicts, AND sufficient context -> FEASIBLE
+    sufficient_context = PersonalContext(
+        constraints=[],
+        preferences=[],
+        has_sufficient_context=True,
+    )
+    
+    feasibility_feasible = evaluate_candidate_feasibility(candidate_time, sufficient_context, "jogging")
+    
+    assert feasibility_feasible.status == FeasibilityStatus.FEASIBLE, \
+        "No conflicts + sufficient context must be FEASIBLE"
+    assert "No conflicting personal commitments detected" in feasibility_feasible.evidence
+    
+    # Ensure the two cases are distinct
+    assert feasibility_unknown.status != feasibility_feasible.status, \
+        "UNKNOWN and FEASIBLE must be distinct states"
+
+
 def test_conflicting_when_too_late():
     """Candidate time after latest_activity_end is CONFLICTING."""
     now = datetime.now().replace(hour=10, minute=0)

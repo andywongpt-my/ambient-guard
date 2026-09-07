@@ -6,182 +6,496 @@
 <title>Ambient Guard — Personal Environmental Agent</title>
 <style>
   :root {
-    --bg:#0e1116; --panel:#171b22; --border:#262c36; --fg:#e6e9ef; --muted:#9aa4b2;
-    --accent:#5db0ff; --warn:#ff6b6b; --caution:#ffb454; --ok:#4ec98f;
+    --bg:#0a0d12; --panel:#141920; --card:#1a2028; --border:#283040;
+    --fg:#e8ecf2; --muted:#8b98a8; --accent:#5dadec; --accent-dim:#3a7ab0;
+    --warn:#f06292; --caution:#ffb74d; --ok:#66bb6a; --info:#42a5f5;
   }
-  * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--fg);
-         font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
-  header { padding:20px 24px; border-bottom:1px solid var(--border); display:flex;
-           align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
-  h1 { font-size:20px; margin:0; } h1 span { color:var(--accent); }
-  .tag { color:var(--muted); font-size:13px; }
-  main { max-width:960px; margin:0 auto; padding:20px 24px 60px; }
-  .row { display:flex; gap:16px; flex-wrap:wrap; }
-  .panel { background:var(--panel); border:1px solid var(--border); border-radius:12px;
-           padding:16px 18px; margin-bottom:16px; flex:1; min-width:280px; }
-  .panel h2 { font-size:12px; letter-spacing:.08em; text-transform:uppercase;
-              color:var(--muted); margin:0 0 10px; }
-  .big { font-size:18px; font-weight:600; }
-  .metrics { display:flex; gap:14px; flex-wrap:wrap; }
-  .metric { background:#0e1116; border:1px solid var(--border); border-radius:10px;
-            padding:10px 14px; min-width:96px; }
-  .metric .v { font-size:22px; font-weight:700; } .metric .l { color:var(--muted); font-size:12px; }
-  .rec { border-left:4px solid var(--accent); }
-  .rec.warning { border-color:var(--warn); } .rec.caution { border-color:var(--caution); }
-  .rec.info { border-color:var(--ok); }
-  ul.ev { list-style:none; padding:0; margin:0; }
-  ul.ev li { padding:8px 0; border-bottom:1px solid var(--border); }
-  ul.ev li:last-child { border-bottom:0; }
-  .pill { display:inline-block; font-size:11px; padding:1px 8px; border-radius:999px;
-          margin-right:8px; text-transform:uppercase; letter-spacing:.05em; }
-  .pill.warning { background:#3a1414; color:var(--warn); }
-  .pill.caution { background:#3a2a10; color:var(--caution); }
-  .pill.info { background:#0f2b1f; color:var(--ok); }
-  .src { color:var(--muted); font-size:12px; }
-  button { background:var(--accent); color:#04101f; border:0; border-radius:8px;
-           padding:9px 16px; font-weight:600; cursor:pointer; }
-  input { background:#0e1116; border:1px solid var(--border); color:var(--fg);
-          border-radius:8px; padding:8px 10px; }
-  table { width:100%; border-collapse:collapse; font-size:13px; }
-  th,td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--border); }
-  th { color:var(--muted); font-weight:600; }
-  .note { color:var(--muted); font-size:12px; margin-top:6px; }
-  .err { color:var(--warn); }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--fg);
+         font:15px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; min-height:100vh; }
+  
+  /* Layout */
+  .container { max-width:720px; margin:0 auto; padding:16px 20px 80px; }
+  
+  /* Header */
+  header { padding:24px 0 32px; text-align:center; }
+  header h1 { font-size:28px; font-weight:600; letter-spacing:-0.02em; margin-bottom:8px; }
+  header h1 span { color:var(--accent); }
+  header .tagline { color:var(--muted); font-size:15px; }
+  header .bee-powered { color:var(--accent-dim); font-size:13px; margin-top:6px; }
+  
+  /* States */
+  .state-banner { padding:18px 20px; border-radius:12px; margin-bottom:20px; text-align:center; }
+  .state-banner.keep { background:linear-gradient(135deg,#1a2f1a,#0f1f0f); border:1px solid #2a4a2a; }
+  .state-banner.better { background:linear-gradient(135deg,#1a2a3f,#0f1f2f); border:1px solid #2a4a6a; }
+  .state-banner.unknown { background:linear-gradient(135deg,#2a2a1f,#1f1f0f); border:1px solid #4a4a2a; }
+  .state-banner.conflict { background:linear-gradient(135deg,#2f1a1a,#1f0f0f); border:1px solid #4a2a2a; }
+  .state-banner.insufficient { background:var(--card); border:1px solid var(--border); }
+  .state-banner .state-label { font-size:11px; text-transform:uppercase; letter-spacing:0.12em;
+                               color:var(--muted); margin-bottom:6px; }
+  .state-banner .state-message { font-size:18px; font-weight:600; }
+  .state-banner .state-reason { font-size:14px; color:var(--muted); margin-top:6px; }
+  
+  /* Sections */
+  .section { margin-bottom:20px; }
+  .section-title { font-size:11px; letter-spacing:0.1em; text-transform:uppercase;
+                   color:var(--muted); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .section-title::after { content:""; flex:1; height:1px; background:var(--border); }
+  
+  /* Cards */
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px 20px; }
+  .card-split { display:flex; gap:16px; flex-wrap:wrap; }
+  .card-split > .card { flex:1; min-width:200px; }
+  
+  /* Plan card */
+  .plan { display:flex; align-items:center; gap:16px; }
+  .plan-icon { width:48px; height:48px; border-radius:10px; background:var(--card);
+               display:flex; align-items:center; justify-content:center; font-size:24px; }
+  .plan-details h3 { font-size:18px; font-weight:600; margin-bottom:2px; }
+  .plan-details .time { color:var(--accent); font-size:16px; font-weight:500; }
+  .plan-details .source { color:var(--muted); font-size:12px; margin-top:4px; }
+  
+  /* Environmental metrics */
+  .metrics-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(100px,1fr)); gap:10px; }
+  .metric-item { background:var(--card); border-radius:10px; padding:12px; text-align:center; }
+  .metric-item .value { font-size:22px; font-weight:700; }
+  .metric-item .label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; }
+  .metric-item .kind { font-size:10px; color:var(--accent-dim); margin-top:2px; }
+  .metric-item.caution .value { color:var(--caution); }
+  .metric-item.warning .value { color:var(--warn); }
+  .metric-item.ok .value { color:var(--ok); }
+  
+  /* Alternative window */
+  .alt-window { display:flex; gap:16px; align-items:stretch; }
+  .alt-planned, .alt-better { flex:1; padding:14px 16px; border-radius:10px; }
+  .alt-planned { background:var(--card); border:1px solid var(--border); }
+  .alt-better { background:linear-gradient(135deg,#1a2a3f,#0f1f2f); border:1px solid #2a4a6a; }
+  .alt-label { font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); margin-bottom:6px; }
+  .alt-time { font-size:16px; font-weight:600; margin-bottom:8px; }
+  .alt-metrics { font-size:13px; color:var(--muted); line-height:1.5; }
+  .alt-metrics .improved { color:var(--ok); }
+  
+  /* Feasibility */
+  .feasibility { padding:12px 16px; background:var(--card); border-radius:10px; margin-top:12px; }
+  .feasibility .status { font-size:13px; }
+  .feasibility .status.unknown { color:var(--caution); }
+  .feasibility .status.feasible { color:var(--ok); }
+  .feasibility .status.conflict { color:var(--warn); }
+  .feasibility .note { font-size:12px; color:var(--muted); margin-top:4px; }
+  
+  /* Timeline */
+  .timeline { border-left:2px solid var(--border); margin-left:8px; padding-left:20px; }
+  .timeline-entry { position:relative; padding:12px 0 20px; }
+  .timeline-entry::before { content:""; position:absolute; left:-26px; top:16px; width:10px; height:10px;
+                             border-radius:50%; background:var(--border); border:2px solid var(--bg); }
+  .timeline-entry.planned::before { background:var(--accent); }
+  .timeline-entry.bee::before { background:var(--info); }
+  .timeline-entry.alternative::before { background:var(--ok); }
+  .timeline-entry .time { font-size:13px; color:var(--accent); font-weight:600; margin-bottom:4px; }
+  .timeline-entry .label { font-size:15px; margin-bottom:2px; }
+  .timeline-entry .meta { font-size:12px; color:var(--muted); }
+  .timeline-entry .conditions { display:flex; gap:12px; margin-top:8px; font-size:12px; color:var(--muted); }
+  
+  /* Evidence drawer */
+  .drawer-toggle { background:none; border:none; color:var(--accent); cursor:pointer;
+                   font-size:13px; padding:8px 0; display:flex; align-items:center; gap:6px; }
+  .drawer-toggle:hover { text-decoration:underline; }
+  .drawer-toggle .icon { transition:transform 0.2s; }
+  .drawer-toggle.open .icon { transform:rotate(90deg); }
+  .drawer-content { display:none; padding-top:12px; }
+  .drawer-content.open { display:block; }
+  .evidence-table { width:100%; font-size:13px; border-collapse:collapse; }
+  .evidence-table th, .evidence-table td { text-align:left; padding:8px; border-bottom:1px solid var(--border); }
+  .evidence-table th { color:var(--muted); font-weight:500; }
+  
+  /* Loading / error states */
+  .loading { text-align:center; padding:40px 20px; color:var(--muted); }
+  .loading-spinner { width:32px; height:32px; border:3px solid var(--border);
+                     border-top-color:var(--accent); border-radius:50%;
+                     animation:spin 1s linear infinite; margin:0 auto 16px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  
+  .error { text-align:center; padding:40px 20px; }
+  .error .message { color:var(--warn); margin-bottom:12px; }
+  
+  .no-activity { text-align:center; padding:40px 20px; color:var(--muted); }
+  .no-activity .message { margin-bottom:16px; }
+  
+  /* Footer */
+  footer { margin-top:32px; padding-top:16px; border-top:1px solid var(--border);
+           font-size:12px; color:var(--muted); text-align:center; }
+  footer .privacy { max-width:500px; margin:0 auto 8px; line-height:1.5; }
+  
+  /* Utility */
+  .hidden { display:none !important; }
+  .pill { display:inline-block; font-size:10px; padding:2px 8px; border-radius:999px;
+          text-transform:uppercase; letter-spacing:0.05em; }
+  .pill.forecast { background:#1a2a3f; color:var(--info); }
+  .pill.observed { background:#1a2f1a; color:var(--ok); }
+  .pill.bee { background:#2a1a3f; color:#a78bfa; }
+  
+  /* Controls */
+  .controls { display:flex; gap:12px; justify-content:center; margin-top:16px; flex-wrap:wrap; }
+  .btn { background:var(--accent); color:#04101f; border:none; border-radius:8px;
+         padding:10px 20px; font-weight:600; cursor:pointer; font-size:14px; }
+  .btn:hover { background:var(--accent-dim); }
+  .btn.secondary { background:var(--card); color:var(--fg); border:1px solid var(--border); }
+  .btn.secondary:hover { background:var(--panel); }
+  
+  /* Responsive */
+  @media (max-width:600px) {
+    .container { padding:12px 16px 60px; }
+    header h1 { font-size:22px; }
+    .card-split { flex-direction:column; }
+    .metrics-grid { grid-template-columns:repeat(2,1fr); }
+    .alt-window { flex-direction:column; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>Ambient<span>Guard</span> <span class="tag">— Personal Environmental Agent powered by Bee</span></h1>
-  <div class="row" style="align-items:center">
-    <input id="intent" placeholder="Override intent (e.g. jog at 5 PM)" size="26" />
-    <button id="run">Assess</button>
-  </div>
-</header>
-<main>
-  <div id="status" class="note">Loading assessment…</div>
-
-  <!-- 1. Bee context -->
-  <div class="panel">
-    <h2>1 · Bee-derived personal context</h2>
-    <div id="ctx"></div>
-  </div>
-
-  <div class="row">
-    <!-- 2. Conditions -->
-    <div class="panel">
-      <h2>2 · Environmental conditions</h2>
-      <div id="conditions" class="metrics"></div>
+<div class="container">
+  <header>
+    <h1>Ambient<span>Guard</span></h1>
+    <div class="tagline">Your Personal Environmental Agent</div>
+    <div class="bee-powered">Powered by real context from Bee</div>
+  </header>
+  
+  <main id="main">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <div>Loading assessment...</div>
     </div>
-  </div>
-
-  <!-- 3. Recommendation -->
-  <div id="rec" class="panel rec">
-    <h2>3 · Ambient Guard recommendation</h2>
-    <div id="rectext" class="big"></div>
-    <div id="recsummary" class="note"></div>
-  </div>
-
-  <!-- 4. Evidence -->
-  <div class="panel">
-    <h2>4 · Evidence</h2>
-    <ul id="evidence" class="ev"></ul>
-  </div>
-
-  <!-- 5. Timeline -->
-  <div class="panel">
-    <h2>5 · Environmental timeline</h2>
-    <table id="timeline"><thead><tr>
-      <th>Time</th><th>Data</th><th>Exposure</th><th>AQI</th><th>UV</th><th>Temp °C</th><th>PM2.5</th>
-    </tr></thead><tbody></tbody></table>
-  </div>
-</main>
+  </main>
+  
+  <footer>
+    <div class="privacy">
+      Ambient Guard processes only the Bee context needed for the current environmental decision.
+      Raw Bee context is not stored by Ambient Guard.
+    </div>
+    <div id="timestamp"></div>
+  </footer>
+</div>
 
 <script>
-const $ = (id) => document.getElementById(id);
-// Path-relative API base: works whether the app is served at the origin root
-// (Tailscale serve on a dedicated port) or under a mount prefix like /ambient-guard
-// (Tailscale Funnel path on :443). Strips a trailing index.html and trailing slash.
+const $ = (sel) => document.querySelector(sel);
 const API = (location.pathname.replace(/\/index\.html$/, "").replace(/\/$/, "")) || "";
 
-function fmt(v, s="") { return (v===null||v===undefined) ? "—" : (Math.round(v*10)/10)+s; }
+function fmt(v, s) { return (v===null||v===undefined) ? "—" : (Math.round(v*10)/10)+(s||""); }
 function timeShort(iso){ try { return new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); } catch { return iso; } }
+function dateShort(iso){ try { return new Date(iso).toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'}); } catch { return iso; } }
 
-async function assess() {
-  $("status").textContent = "Running assessment…";
-  $("status").className = "note";
-  const body = {};
-  const ov = $("intent").value.trim();
-  if (ov) body.intent_override = ov;
-  let data;
-  try {
-    const r = await fetch(API + "/api/v1/assess", {
-      method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)
-    });
-    data = await r.json();
-    if (!r.ok) throw new Error(data.detail || ("HTTP "+r.status));
-  } catch (e) {
-    $("status").textContent = "Assessment failed: " + e.message;
-    $("status").className = "note err";
-    return;
-  }
-  const a = data.assessment;
-  $("status").textContent = "Bee mode: " + data.bee_mode + " · assessed " + timeShort(a.recommendation.timestamps.assessed_at);
-
-  // 1. context
-  const c = a.context;
-  $("ctx").innerHTML =
-    `<div class="big">${c.intent_text || "(no intent-bearing Bee context)"}</div>
-     <div class="note">activity: <b>${c.activity ?? "—"}</b> · planned: <b>${c.planned_time?timeShort(c.planned_time):"—"}</b>
-       · location: <b>${c.location ?? "—"}</b> · confidence: <b>${fmt(c.confidence)}</b></div>
-     <div class="src">source: ${c.source_ref.provider} (ref ${c.source_ref.ref_id ?? "?"}) · recent-location: ${c.location_is_recent}</div>`;
-
-  // 2. conditions
-  const byMetric = {}; a.observations.forEach(o => byMetric[o.metric] = o);
-  const want = [["aqi","AQI"],["pm25","PM2.5"],["uv","UV"],["temp_c","Temp °C"],["humidity","Humidity %"]];
-  $("conditions").innerHTML = want.map(([m,l]) => {
-    const o = byMetric[m];
-    return `<div class="metric"><div class="v">${o?fmt(o.value):"—"}</div><div class="l">${l}</div></div>`;
-  }).join("");
-
-  // 3. recommendation
-  const worst = a.recommendation.evidence.reduce((w,e)=>({info:0,caution:1,warning:2}[e.severity]>{info:0,caution:1,warning:2}[w]?e.severity:w),"info");
-  $("rec").className = "panel rec " + worst;
-  $("rectext").textContent = a.recommendation.text;
-  $("recsummary").textContent = a.recommendation.reasoning_summary + " · confidence " + fmt(a.recommendation.confidence);
-
-  // 4. evidence
-  $("evidence").innerHTML = a.recommendation.evidence.map(e =>
-    `<li><span class="pill ${e.severity}">${e.severity}</span>${e.note}
-       <span class="src">— ${e.observation.metric} ${fmt(e.observation.value)} ${e.observation.unit}
-       (${e.observation.kind}, ${e.observation.source.provider})</span></li>`).join("");
-
-  // 5. timeline (needs coords)
-  if (c.latitude != null && c.longitude != null) loadTimeline(c.latitude, c.longitude, c.planned_time);
-  else $("#timeline tbody") && ($("timeline").querySelector("tbody").innerHTML =
-    `<tr><td colspan="7" class="note">No coordinates available for timeline.</td></tr>`);
+function renderError(message) {
+  return '<div class="error"><div class="message">' + escapeHtml(message) + '</div>' +
+    '<button class="btn" onclick="assess()">Retry</button></div>';
 }
 
-async function loadTimeline(lat, lon, planned) {
-  try {
-    const q = `${API}/api/v1/timeline?lat=${lat}&lon=${lon}&hours=12` + (planned ? `&planned=${encodeURIComponent(planned)}` : "");
-    const r = await fetch(q);
-    const d = await r.json();
-    $("timeline").querySelector("tbody").innerHTML = d.entries.map(e => {
-      const mark = e.is_planned ? ' style="background:#0e2436"' : "";
-      const planned = e.is_planned ? ' ◀ planned' : "";
-      return `<tr${mark}><td>${timeShort(e.time)}${planned}</td><td>${e.data_kind}</td>
-        <td>${e.exposure_kind}</td><td>${fmt(e.aqi)}</td>
-        <td>${fmt(e.uv)}</td><td>${fmt(e.temp_c)}</td><td>${fmt(e.pm25)}</td></tr>`;
-    }).join("");
-  } catch (e) {
-    $("timeline").querySelector("tbody").innerHTML =
-      `<tr><td colspan="7" class="err">Timeline failed: ${e.message}</td></tr>`;
-  }
+function renderNoActivity(message) {
+  return '<div class="no-activity"><div class="message">' + escapeHtml(message) + '</div>' +
+    '<div class="controls"><button class="btn secondary" onclick="assess()">Refresh</button></div></div>';
 }
 
-$("run").addEventListener("click", assess);
-$("intent").addEventListener("keydown", (e)=>{ if(e.key==="Enter") assess(); });
+function escapeHtml(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function getStateClass(state) {
+  if (!state) return "insufficient";
+  if (state === "keep_planned_time" || state === "no_materially_better_window") return "keep";
+  if (state === "better_window_available") return "better";
+  if (state === "better_window_feasibility_unknown") return "unknown";
+  if (state === "better_window_conflicts_with_context") return "conflict";
+  return "insufficient";
+}
+
+function getStateLabel(state) {
+  var labels = {
+    "keep_planned_time": "KEEP YOUR PLANNED TIME",
+    "no_materially_better_window": "NO MATERIALLY BETTER WINDOW",
+    "better_window_available": "BETTER WINDOW AVAILABLE",
+    "better_window_feasibility_unknown": "BETTER WINDOW - FEASIBILITY UNKNOWN",
+    "better_window_conflicts_with_context": "BETTER WINDOW - CONFLICT DETECTED",
+    "insufficient_environmental_data": "INSUFFICIENT ENVIRONMENTAL DATA",
+    "insufficient_personal_context": "INSUFFICIENT PERSONAL CONTEXT",
+    "activity_context_uncertain": "ACTIVITY CONTEXT UNCERTAIN"
+  };
+  return labels[state] || "UNABLE TO ASSESS";
+}
+
+function getStateMessage(state, data) {
+  if (data.natural_language_recommendation) {
+    return data.natural_language_recommendation;
+  }
+  var a = data.assessment;
+  if (state === "keep_planned_time") {
+    return "Your planned time looks reasonable from an environmental perspective.";
+  }
+  if (state === "no_materially_better_window") {
+    return "No clearly better environmental window was found within the search range.";
+  }
+  return (a && a.recommendation && a.recommendation.text) || "Unable to generate recommendation.";
+}
+
+function getSeverityClass(severity) {
+  if (severity === "warning") return "warning";
+  if (severity === "caution") return "caution";
+  return "ok";
+}
+
+function renderAssessment(data) {
+  var a = data.assessment;
+  var state = a.decision_state;
+  var ctx = a.context;
+  var pw = a.planned_window;
+  var pc = a.personal_context;
+  var timeline = a.timeline;
+  
+  // Check for no activity
+  if (!ctx.activity && state === "activity_context_uncertain") {
+    return renderNoActivity("No relevant upcoming outdoor activity was found in your current Bee context.");
+  }
+  
+  var html = "";
+  
+  // 1. Decision banner
+  html += '<div class="state-banner ' + getStateClass(state) + '">' +
+    '<div class="state-label">' + getStateLabel(state) + '</div>' +
+    '<div class="state-message">' + escapeHtml(getStateMessage(state, data)) + '</div>';
+  if (a.reason_codes && a.reason_codes.length) {
+    html += '<div class="state-reason">' + a.reason_codes.map(escapeHtml).join(" · ") + '</div>';
+  }
+  html += '</div>';
+  
+  // 2. My Plan (Bee context)
+  html += '<div class="section">' +
+    '<div class="section-title">My Plan</div>' +
+    '<div class="card">' +
+      '<div class="plan">' +
+        '<div class="plan-icon">' + getActivityIcon(ctx.activity) + '</div>' +
+        '<div class="plan-details">' +
+          '<h3>' + escapeHtml(ctx.activity || "Unknown activity") + '</h3>' +
+          '<div class="time">' + (ctx.planned_time ? timeShort(ctx.planned_time) : "— : —") + '</div>' +
+          '<div class="source">Source: <span class="pill bee">Bee</span></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+  
+  // 3. Environmental Context
+  if (pw) {
+    html += '<div class="section">' +
+      '<div class="section-title">Environmental Context</div>' +
+      '<div class="card">' +
+        '<div class="metrics-grid">' +
+          '<div class="metric-item ' + getSeverityClass(pw.severity) + '">' +
+            '<div class="value">' + fmt(pw.aqi) + '</div>' +
+            '<div class="label">US AQI</div>' +
+            '<div class="kind pill forecast">forecast</div>' +
+          '</div>' +
+          '<div class="metric-item">' +
+            '<div class="value">' + fmt(pw.pm25) + '</div>' +
+            '<div class="label">PM2.5 µg/m³</div>' +
+          '</div>' +
+          '<div class="metric-item">' +
+            '<div class="value">' + fmt(pw.uv) + '</div>' +
+            '<div class="label">UV Index</div>' +
+          '</div>' +
+          '<div class="metric-item">' +
+            '<div class="value">' + fmt(pw.temp_c) + '°</div>' +
+            '<div class="label">Temp °C</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+  
+  // 4. Alternative window (if better available)
+  if (a.environmentally_better_window && a.alternatives && a.alternatives.length > 0) {
+    var alt = a.alternatives[0];
+    html += '<div class="section">' +
+      '<div class="section-title">Alternative Window</div>' +
+      '<div class="card">' +
+        '<div class="alt-window">' +
+          '<div class="alt-planned">' +
+            '<div class="alt-label">Planned</div>' +
+            '<div class="alt-time">' + (ctx.planned_time ? timeShort(ctx.planned_time) : "—") + '</div>' +
+            '<div class="alt-metrics">AQI ' + fmt(pw && pw.aqi) + ' · UV ' + fmt(pw && pw.uv) + ' · ' + fmt(pw && pw.temp_c) + '°C</div>' +
+          '</div>' +
+          '<div class="alt-better">' +
+            '<div class="alt-label">Environmentally Better</div>' +
+            '<div class="alt-time">' + timeShort(alt.time) + '</div>' +
+            '<div class="alt-metrics">';
+    if (alt.better_metrics && alt.better_metrics.length) {
+      html += '<span class="improved">' + alt.better_metrics.join(", ") + ' improved</span>';
+    } else {
+      html += 'AQI ' + fmt(alt.aqi) + ' · UV ' + fmt(alt.uv) + ' · ' + fmt(alt.temp_c) + '°C';
+    }
+    html += '</div></div></div>' + renderFeasibility(alt, pc) + '</div></div>';
+  }
+  
+  // 5. Personal Environmental Timeline
+  if (timeline && timeline.entries && timeline.entries.length > 0) {
+    html += '<div class="section">' +
+      '<div class="section-title">Personal Environmental Timeline</div>' +
+      '<div class="card">' +
+        '<div class="timeline">';
+    for (var i = 0; i < timeline.entries.length; i++) {
+      html += renderTimelineEntry(timeline.entries[i], ctx.planned_time);
+    }
+    html += '</div></div></div>';
+  }
+  
+  // 6. Evidence drawer
+  html += '<div class="section">' +
+    '<button class="drawer-toggle" onclick="toggleDrawer(this)">' +
+      '<span class="icon">▶</span> Why did Ambient Guard decide this?' +
+    '</button>' +
+    '<div class="drawer-content">' +
+      '<div class="card">' +
+        '<table class="evidence-table">' +
+          '<tr><th>Field</th><th>Value</th></tr>' +
+          '<tr><td>Activity</td><td>' + escapeHtml(ctx.activity || "—") + '</td></tr>' +
+          '<tr><td>Planned</td><td>' + (ctx.planned_time ? timeShort(ctx.planned_time) : "—") + '</td></tr>' +
+          '<tr><td>US AQI</td><td>' + fmt(pw && pw.aqi) + '</td></tr>' +
+          '<tr><td>PM2.5</td><td>' + fmt(pw && pw.pm25) + ' µg/m³</td></tr>' +
+          '<tr><td>UV</td><td>' + fmt(pw && pw.uv) + '</td></tr>' +
+          '<tr><td>Temperature</td><td>' + fmt(pw && pw.temp_c) + '°C</td></tr>' +
+          '<tr><td>Environmental source</td><td>Open-Meteo / CAMS Global</td></tr>' +
+          '<tr><td>Data</td><td><span class="pill forecast">forecast</span></td></tr>' +
+          '<tr><td>Decision state</td><td>' + escapeHtml(state || "—") + '</td></tr>';
+  if (a.reason_codes && a.reason_codes.length) {
+    html += '<tr><td>Reason</td><td>' + a.reason_codes.map(escapeHtml).join(", ") + '</td></tr>';
+  }
+  html += '</table>';
+  if (pw && pw.data_kind === "forecast") {
+    html += '<div style="margin-top:12px;font-size:12px;color:var(--muted);">' +
+      'Air-quality data is forecast/model-based, not a personal PM2.5 measurement. ' +
+      'Environmental conditions are estimated from nearby model data.' +
+    '</div>';
+  }
+  html += '</div></div></div>';
+  
+  // Controls
+  html += '<div class="controls"><button class="btn secondary" onclick="assess()">Refresh</button></div>';
+  
+  return html;
+}
+
+function getActivityIcon(activity) {
+  if (!activity) return "🎯";
+  var a = activity.toLowerCase();
+  if (a.indexOf("jog") >= 0 || a.indexOf("run") >= 0) return "🏃";
+  if (a.indexOf("walk") >= 0) return "🚶";
+  if (a.indexOf("bike") >= 0 || a.indexOf("cycl") >= 0) return "🚴";
+  if (a.indexOf("swim") >= 0) return "🏊";
+  if (a.indexOf("hike") >= 0) return "🥾";
+  if (a.indexOf("gym") >= 0 || a.indexOf("workout") >= 0) return "💪";
+  return "🎯";
+}
+
+function renderFeasibility(alt, pc) {
+  var status = alt.personal_feasibility_status;
+  if (!status) return "";
+  
+  var statusClass = "unknown";
+  var statusText = "Unknown";
+  var note = "";
+  
+  if (status === "feasible") {
+    statusClass = "feasible";
+    statusText = "No known conflict";
+    note = (pc && pc.freshness && pc.freshness.has_sufficient_context) ? 
+      "Based on your Bee context" : 
+      "Insufficient personal context to fully determine feasibility";
+  } else if (status === "conflicting") {
+    statusClass = "conflict";
+    statusText = "Conflicts with Bee context";
+    if (alt.personal_conflicts && alt.personal_conflicts.length) {
+      var conflictValues = [];
+      for (var i = 0; i < alt.personal_conflicts.length; i++) {
+        conflictValues.push(alt.personal_conflicts[i].value || alt.personal_conflicts[i].constraint_type);
+      }
+      note = conflictValues.join(", ");
+    }
+  } else {
+    statusClass = "unknown";
+    statusText = "Feasibility unknown";
+    note = "Insufficient personal context to determine feasibility";
+  }
+  
+  return '<div class="feasibility">' +
+    '<div class="status ' + statusClass + '">Personal feasibility: ' + statusText + '</div>' +
+    (note ? '<div class="note">' + escapeHtml(note) + '</div>' : '') +
+  '</div>';
+}
+
+function renderTimelineEntry(e, plannedTime) {
+  var isPlanned = plannedTime && e.time === plannedTime;
+  var entryClass = e.entry_type + (isPlanned ? " planned" : "");
+  
+  var sourcePill = "";
+  if (e.entry_type === "bee_context") {
+    sourcePill = '<span class="pill bee">Bee</span>';
+  } else if (e.entry_type === "environmental" || e.entry_type === "planned") {
+    sourcePill = e.data_kind ? '<span class="pill ' + e.data_kind + '">' + e.data_kind + '</span>' : "";
+  }
+  
+  var html = '<div class="timeline-entry ' + entryClass + '">' +
+    '<div class="time">' + timeShort(e.time) + ' ' + sourcePill + '</div>' +
+    '<div class="label">' + escapeHtml(e.label) + '</div>';
+  
+  if (e.environmental_conditions) {
+    var cond = e.environmental_conditions;
+    html += '<div class="conditions">';
+    if (cond.aqi) html += 'AQI ' + fmt(cond.aqi) + ' ';
+    if (cond.uv) html += 'UV ' + fmt(cond.uv) + ' ';
+    if (cond.temp_c) html += fmt(cond.temp_c) + '°C ';
+    html += '</div>';
+  }
+  
+  if (e.uncertainty && e.uncertainty.length) {
+    html += '<div class="meta">Uncertainty: ' + e.uncertainty.join(", ") + '</div>';
+  }
+  
+  html += '</div>';
+  return html;
+}
+
+function toggleDrawer(btn) {
+  btn.classList.toggle("open");
+  btn.nextElementSibling.classList.toggle("open");
+}
+
+function assess() {
+  var main = $("#main");
+  main.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div>Loading assessment...</div></div>';
+  
+  fetch(API + "/api/v1/assess", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({})
+  })
+  .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
+  .then(function(result) {
+    if (!result.ok) {
+      main.innerHTML = renderError(result.data.detail || "HTTP error");
+      return;
+    }
+    
+    main.innerHTML = renderAssessment(result.data);
+    
+    var ts = result.data.assessment && result.data.assessment.recommendation && 
+             result.data.assessment.recommendation.timestamps && 
+             result.data.assessment.recommendation.timestamps.assessed_at;
+    if (ts) {
+      $("#timestamp").textContent = "Last updated: " + new Date(ts).toLocaleString();
+    }
+  })
+  .catch(function(e) {
+    main.innerHTML = renderError(e.message);
+  });
+}
+
+// Initial load
 assess();
 </script>
 </body>

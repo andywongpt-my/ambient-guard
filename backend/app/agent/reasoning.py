@@ -154,6 +154,7 @@ class ReasoningEngine:
         reason_codes: list[str] = []
         limitations: list[str] = []
         candidate_evaluations: list[dict[str, Any]] = []
+        decision_state_value: str | None = None  # G4: Track decision state for UI
         
         if observe_func and lat is not None and lon is not None and context.planned_time:
             try:
@@ -222,6 +223,9 @@ class ReasoningEngine:
                         material_improvement_met=True,
                     )
                     
+                    # G4: Track decision state for UI
+                    decision_state_value = decision.state.value
+                    
                     # Update recommendation based on decision state
                     reason_codes.extend(decision.reason_codes)
                     limitations.extend(decision.limitations)
@@ -243,6 +247,7 @@ class ReasoningEngine:
                         has_environmental_data=True,
                         material_improvement_met=False,
                     )
+                    decision_state_value = decision.state.value
                     reason_codes.extend(decision.reason_codes)
                 
             except Exception as e:
@@ -273,7 +278,7 @@ class ReasoningEngine:
                     "assessed_at": now,
                 },
                 confidence=round(min(1.0, 0.5 + 0.1 * len(evidence)) * (context.confidence or 0.6), 2),
-                decision_state=reason_codes[0] if reason_codes else None,
+                decision_state=decision_state_value,
             ),
             provider_errors=provider_errors or [],
             # G2.6: Structured explanation data
@@ -287,7 +292,7 @@ class ReasoningEngine:
             # G3: Personal context intelligence
             personal_context=personal_context_record,
             candidate_evaluations=candidate_evaluations,
-            decision_state=reason_codes[0] if reason_codes else None,
+            decision_state=decision_state_value,
             natural_language_recommendation=text,
             timeline=timeline,
         )
