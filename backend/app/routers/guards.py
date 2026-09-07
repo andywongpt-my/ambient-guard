@@ -223,6 +223,37 @@ async def discover_guards() -> dict[str, Any]:
         raise HTTPException(status_code=502, detail=str(e))
 
 
+@router.post("/{guard_id}/assess")
+async def assess_guard(guard_id: str) -> dict[str, Any]:
+    """Run a baseline or follow-up assessment for a guard.
+    
+    Transitions DISCOVERED guards to ACTIVE after baseline assessment.
+    """
+    store = await get_guard_store()
+    lifecycle = GuardLifecycle(store=store)
+    
+    guard = await store.get_guard(guard_id)
+    if not guard:
+        raise HTTPException(status_code=404, detail=f"Guard not found: {guard_id}")
+    
+    try:
+        assessment = await lifecycle.assess_guard(guard)
+        
+        # Refresh guard to get updated status
+        guard = await store.get_guard(guard_id)
+        
+        return {
+            "guard_id": guard_id,
+            "assessment_number": assessment.assessment_number,
+            "decision_state": assessment.decision_state,
+            "severity": assessment.severity,
+            "reason_codes": assessment.reason_codes,
+            "guard_status": guard.status.value if guard else None,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+
 @router.post("/{guard_id}/acknowledge")
 async def acknowledge_guard_alert(guard_id: str) -> dict[str, Any]:
     """Acknowledge the latest alert for a guard."""
