@@ -13,6 +13,8 @@ services:
       # From the container, reach it via the host gateway (see extra_hosts below).
       AMBIENT_GUARD_BEE_MCP_URL: ${AMBIENT_GUARD_BEE_MCP_URL:-http://host.docker.internal:8790/mcp}
       AMBIENT_GUARD_BEE_HTTP_TOKEN: ${AMBIENT_GUARD_BEE_HTTP_TOKEN:-}
+      # R3 fallback location used when Bee's current location is stale (is_recent=false).
+      AMBIENT_GUARD_DEFAULT_LOCATION: ${AMBIENT_GUARD_DEFAULT_LOCATION:-}
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ambient:ambient@db:5432/ambient_guard}
     extra_hosts:
       - "host.docker.internal:host-gateway"
