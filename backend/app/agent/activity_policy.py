@@ -5,11 +5,40 @@ and provides activity-specific thresholds and recommendations.
 
 Keep V1 conservative and explainable. This is NOT medical diagnosis.
 
-Threshold sources:
-- US EPA AQI: https://www.airnow.gov/aqi/aqi-basics/
-- WHO Air Quality Guidelines: https://www.who.int/publications/i/item/9789240034228
-- UV Index: https://www.epa.gov/sunsafety/uv-index-scale-0
-- Heat Index: https://www.weather.gov/safety/heat
+## Threshold Sources
+
+### US EPA AQI (Official)
+- Good: 0-50
+- Moderate: 51-100
+- Unhealthy for Sensitive Groups: 101-150
+- Unhealthy: 151-200
+- Source: https://www.airnow.gov/aqi/aqi-basics/
+
+### WHO Air Quality Guidelines (Official)
+- PM2.5 24-hour: 15 µg/m³
+- PM10 24-hour: 45 µg/m³
+- Source: https://www.who.int/publications/i/item/9789240034228
+
+### UV Index (Official - EPA)
+- Low: 0-2
+- Moderate: 3-5
+- High: 6-7
+- Very High: 8-10
+- Extreme: 11+
+- Source: https://www.epa.gov/sunsafety/uv-index-scale-0
+
+### Heat Index (Official - NWS)
+- Caution: 27-32°C (apparent temp)
+- Extreme Caution: 32-38°C
+- Danger: 38-46°C
+- Source: https://www.weather.gov/safety/heat
+
+### Ambient Guard Heuristics (Product-Specific)
+- Metric importance weights: HIGH=3x, MEDIUM=2x, LOW=1x
+- Minimum improvement threshold: 15% score reduction
+- Activity-specific exertion levels
+- These are NOT health standards; they are product design choices.
+
 """
 from __future__ import annotations
 

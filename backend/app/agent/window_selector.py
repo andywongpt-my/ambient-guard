@@ -71,6 +71,10 @@ _IMPORTANCE_WEIGHTS = {
 # Minimum improvement threshold to recommend an alternative (avoid trivial switches)
 _MIN_IMPROVEMENT_THRESHOLD = 0.15  # 15% score improvement
 
+# Native model resolution for air quality (CAMS Global is 3-hourly)
+# This affects how we interpret hourly differences
+_AIR_QUALITY_NATIVE_RESOLUTION_HOURS = 3
+
 
 def score_window(
     observations: list[Observation],
@@ -148,6 +152,19 @@ def find_alternative_window(
     now: datetime | None = None,
 ) -> WindowComparison:
     """Find the best alternative time window around the planned activity.
+    
+    ## Material Improvement Policy (G2.6)
+    
+    A candidate window must NOT win merely because its weighted score is numerically smaller.
+    The system requires:
+    
+    1. **Minimum improvement threshold**: Score must improve by >=15%
+    2. **Metric-level improvement**: At least one HIGH-importance metric must improve
+    3. **No high-importance regressions**: No HIGH-importance metric may worsen significantly
+    4. **Source resolution awareness**: Hourly air-quality differences are interpolated from
+       3-hourly CAMS Global model; do not claim precision beyond model resolution
+    5. **Valid "no better window"**: If no candidate meets these criteria, return 
+       `no_better_window_in_range` rather than forcing a trivial switch
     
     Args:
         planned_time: The originally planned activity time
